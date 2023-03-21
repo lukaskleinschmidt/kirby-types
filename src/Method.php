@@ -1,12 +1,7 @@
 <?php
 
-namespace LukasKleinschmidt\TypeHints;
+namespace LukasKleinschmidt\Types;
 
-use phpDocumentor\Reflection\DocBlock;
-use phpDocumentor\Reflection\DocBlock\Serializer;
-use phpDocumentor\Reflection\DocBlockFactory;
-use phpDocumentor\Reflection\Types\Context;
-use phpDocumentor\Reflection\Types\ContextFactory;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
@@ -24,14 +19,9 @@ class Method
     protected ReflectionClass $target;
 
     /**
-     * The function DocBlock.
+     * The Docblock.
      */
-    protected DocBlock $docblock;
-
-    /**
-     * The function context.
-     */
-    protected Context $context;
+    protected Comment $comment;
 
     /**
      * The method alias.
@@ -46,7 +36,7 @@ class Method
     /**
      * The method parameters.
      */
-    protected array $parameters;
+    protected Parameters $parameters;
 
     /**
      * Create a new instance.
@@ -57,82 +47,44 @@ class Method
         string $name = null,
         string $alias = null
     ) {
-        $this->function = $function;
-        $this->target   = $target;
-        $this->alias    = $alias;
-        $this->name     = $name ?? $function->getName();
-
-        if ($function instanceof ReflectionMethod) {
-            $class = $function->getDeclaringClass();
-
-            $this->context(
-                $class->getNamespaceName(),
-                $class->getFileName()
-            );
-        }
-
-        $this->normalize();
+        $this->function   = $function;
+        $this->target     = $target;
+        $this->alias      = $alias;
+        $this->name       = $name ?? $function->getName();
+        $this->comment    = $this->createComment();
+        $this->parameters = $this->createParameters();
     }
 
     /**
-     * Normalize the method.
+     * Create the comment.
      */
-    protected function normalize(): void
+    protected function createComment(): Comment
     {
-        //
+        return Comment::from($this->function);
     }
 
     /**
-     * Returns the docblock context.
+     * Create the parameters.
      */
-    protected function context(string $namespace = null, string $file = null): Context
+    protected function createParameters(): Parameters
     {
-        if (isset($this->context)) {
-            return $this->context;
-        }
-
-        $namespace ??= $this->function->getNamespaceName();
-        $file      ??= $this->function->getFileName();
-
-        return $this->context = (new ContextFactory)->createForNamespace(
-            $namespace, file_get_contents($file)
-        );
+        return Parameters::from($this->function);
     }
 
     /**
-     * Change the docblock context.
+     * Returns the comment.
      */
-    public function useContext(Context $context): void
+    public function comment(): Comment
     {
-        $this->context = $context;
+        return $this->comment;
     }
 
     /**
-     * Returns the DocBlock.
+     * Returns the parameters.
      */
-    protected function docblock(): DocBlock
+    public function parameters(): Parameters
     {
-        return $this->docblock ??= DocBlockFactory::createInstance()->create(
-            $this->function->getDocComment() ?: ' ', $this->context()
-        );
-    }
-
-    /**
-     * Returns the function parameters.
-     *
-     * @return \LukasKleinschmidt\TypeHints\Parameter[]
-     */
-    protected function parameters(): array
-    {
-        return $this->parameters ??= (function () {
-            $parameters = [];
-
-            foreach ($this->function->getParameters() as $param) {
-                $parameters[] = new Parameter($param, $this->context());
-            }
-
-            return $parameters;
-        })();
+        return $this->parameters;
     }
 
     /**
@@ -144,28 +96,24 @@ class Method
     }
 
     /**
-     * Returns the method index.
+     * Returns the function.
      */
-    public function index(): string
-    {
-        return $this->target->getName() . '::' . strtolower($this->name);
-    }
-
     public function function(): ReflectionFunction|ReflectionMethod
     {
         return $this->function;
     }
 
+    /**
+     * Returns the target.
+     */
     public function target(): ReflectionClass
     {
         return $this->target;
     }
 
-    public function getDocComment(int $indent = 0): string
+    public function getComment(int $indent = 0): string
     {
-        $serializer = new Serializer($indent, indentFirstLine: false);
-
-        return $serializer->getDocComment($this->docblock());
+        return $this->comment()->serialize($indent);
     }
 
     public function getName(): string
@@ -188,36 +136,15 @@ class Method
         return $this->target->getNamespaceName();
     }
 
-    public function getParams(): string
+    public function getParams(): Parameters
     {
-        return join(', ', $this->parameters());
-    }
-
-    public function getParamsWithTypes(): string
-    {
-        return join(', ', array_map(fn (Parameter $param) =>
-            $param->withType(),
-        $this->parameters()));
-    }
-
-    public function getParamsWithDefaults(): string
-    {
-        return join(', ', array_map(fn (Parameter $param) =>
-            $param->withDefault(),
-        $this->parameters()));
-    }
-
-    public function getParamsWithTypesAndDefaults(): string
-    {
-        return join(', ', array_map(fn (Parameter $param) =>
-            $param->withType()->withDefault(),
-        $this->parameters()));
+        return $this->parameters();
     }
 
     public function getReturnType(): string
     {
         if ($type = $this->function->getReturnType()) {
-            return ': ' . normalize_reflection_type($type);
+            return ': ' . reflection_type_value($type);
         }
 
         return '';

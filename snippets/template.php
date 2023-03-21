@@ -15,12 +15,12 @@ namespace <?= $namespace . PHP_EOL ?>
     {
 <?php
     /**
-     * @var \LukasKleinschmidt\TypeHints\CustomMethod $method
+     * @var \LukasKleinschmidt\Types\CustomMethod $method
      */
     foreach ($methods as $method):
 ?>
-        <?= $method->getDocComment(8) . PHP_EOL ?>
-        public function <?= $name = $method->getName() ?>(<?= $method->getParamsWithTypesAndDefaults() ?>)<?= $method->getReturnType() . PHP_EOL ?>
+        <?= $method->getComment(8) . PHP_EOL ?>
+        public function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
         {
             /** @var \<?= $method->target()->getName() ?> $instance */
             return $instance-><?= $method->getAlias() ?? $name ?>(<?= $method->getParams() ?>);

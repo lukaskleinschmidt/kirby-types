@@ -1,34 +1,35 @@
 <?php
 
+namespace LukasKleinschmidt\Types;
+
 use Kirby\Cms\App;
 use Kirby\CLI\CLI;
-use LukasKleinschmidt\TypeHints\TypeHints;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 @include_once __DIR__ . '/helpers.php';
 
-App::plugin('lukaskleinschmidt/typehints', [
+App::plugin('lukaskleinschmidt/types', [
     'snippets' => [
-        'docblock.stub'  => __DIR__ . '/snippets/docblock.stub.php',
-        'typehints.stub' => __DIR__ . '/snippets/typehints.stub.php',
+        'stubs/types-comment'  => __DIR__ . '/snippets/comment.php',
+        'stubs/types-template' => __DIR__ . '/snippets/template.php',
     ],
     'commands' => [
-        'typehints:create' => [
-            'description' => 'Create typehints',
+        'types:create' => [
+            'description' => 'Create a new IDE helper file',
             'command' => function (CLI $cli) {
-                $typehints = TypeHints::instance($cli->kirby());
+                $typehints = Types::instance($cli->kirby());
 
-                $typehints->fieldMethods();
-                $typehints->blueprints();
-                $typehints->traits();
+                $typehints->withFieldMethods();
+                $typehints->withClassMethods();
+                $typehints->withBlueprintFields();
 
-                $typehints->write($cli->arg('filename'));
+                $typehints->create($cli->arg('filename'));
             },
             'args' => [
                 'filename' => [
                     'prefix' => 'f',
                     'longPrefix' => 'filename',
-                    'description' => 'The name of the type hints file',
+                    'description' => 'The path to the helper file',
                 ],
             ],
         ],

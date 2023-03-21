@@ -1,57 +1,105 @@
 <?php
 
-if (! function_exists('class_uses_recursive')) {
-    /**
-     * Returns all traits used by a class, its parent classes and trait of their traits.
-     */
-    function class_uses_recursive(object|string $class): array
-    {
-        if (is_object($class)) {
-            $class = get_class($class);
-        }
+namespace LukasKleinschmidt\Types;
 
-        $results = [];
+use ReflectionIntersectionType;
+use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionType;
+use ReflectionUnionType;
 
-        foreach (array_reverse(class_parents($class)) + [$class => $class] as $class) {
-            $results += trait_uses_recursive($class);
-        }
-
-        return array_unique($results);
+/**
+ * Returns all traits used by a class, its parent classes and trait of their traits.
+ */
+function class_uses_recursive(object|string $class): array
+{
+    if (is_object($class)) {
+        $class = get_class($class);
     }
+
+    $results = [];
+
+    foreach (array_reverse(class_parents($class)) + [$class => $class] as $class) {
+        $results += trait_uses_recursive($class);
+    }
+
+    return array_unique($results);
 }
 
-if (! function_exists('trait_uses_recursive')) {
-    /**
-     * Returns all traits used by a trait and its traits.
-     */
-    function trait_uses_recursive(string $trait): array
-    {
-        $traits = class_uses($trait) ?: [];
+/**
+ * Returns all traits used by a trait and its traits.
+ */
+function trait_uses_recursive(string $trait): array
+{
+    $traits = class_uses($trait) ?: [];
 
-        foreach ($traits as $trait) {
-            $traits += trait_uses_recursive($trait);
-        }
-
-        return $traits;
+    foreach ($traits as $trait) {
+        $traits += trait_uses_recursive($trait);
     }
+
+    return $traits;
 }
 
-if (! function_exists('normalize_reflection_type')) {
-    /**
-     * Returns all traits used by a trait and its traits.
-     */
-    function normalize_reflection_type(ReflectionType $type): string
-    {
-        if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
-            $name = $type->getName();
-            return str_replace($name, '\\' . trim($name, '\\'), $type);
-        }
-
-        if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-            $types = array_map('normalize_reflection_type', $type->getTypes());
-            return str_replace($type->getTypes(), $types, $type);
-        }
-
-        return (string) $type;
+function reflection_type_value(ReflectionType $type): string
+{
+    if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+        $name = $type->getName();
+        return str_replace($name, '\\' . trim($name, '\\'), $type);
     }
+
+    if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
+        $types = array_map(fn ($type) =>
+            reflection_type_value($type)
+        , $type->getTypes());
+
+        return str_replace($type->getTypes(), $types, $type);
+    }
+
+    return (string) $type;
+}
+
+function get_parameter_type(ReflectionParameter $parameter): ?string
+{
+    if ($type = $parameter->getType()) {
+        return reflection_type_value($type);
+    }
+
+    return null;
+}
+
+function get_parameter_variable(ReflectionParameter $parameter): string
+{
+    return join('', [
+        $parameter->isPassedByReference() ? '&' : '',
+        $parameter->isVariadic() ? '...' : '',
+        '$',
+        $parameter->getName(),
+    ]);
+}
+
+function get_parameter_default(ReflectionParameter $parameter): ?string
+{
+    if (! $parameter->isDefaultValueAvailable()) {
+        return null;
+    }
+
+    $value = $parameter->getDefaultValue();
+
+    if (is_bool($value)) {
+        return $value ? 'true' : 'false';
+    }
+
+    if (is_array($value)) {
+        return '[]';
+    }
+
+    if (is_null($value)) {
+        return 'null';
+    }
+
+    if (is_int($value)) {
+        return $value;
+    }
+
+    return var_export($value, true);
 }

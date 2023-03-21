@@ -1,123 +1,76 @@
 <?php
 
-namespace LukasKleinschmidt\TypeHints;
+namespace LukasKleinschmidt\Types;
 
-use phpDocumentor\Reflection\Types\Context;
 use ReflectionParameter;
 use Stringable;
 
 class Parameter implements Stringable
 {
-    protected ReflectionParameter $parameter;
+    protected string $variableName;
 
-    protected Context $context;
+    protected string $variable;
 
     protected ?string $default;
 
     protected ?string $type;
 
-    protected string $variable;
-
     protected bool $withDefault = false;
 
     protected bool $withType = false;
 
-    public function __construct(ReflectionParameter $parameter, Context $context = null)
-    {
-        $this->parameter = $parameter;
-        $this->context   = $context;
+    public function __construct(
+        protected ReflectionParameter $parameter
+    ) {}
 
-        $this->type     = $this->getType();
-        $this->variable = $this->getVariable();
-        $this->default  = $this->getDefault();
+    public function getVariableName(): string
+    {
+        return $this->variableName ??= $this->parameter->getName();
     }
 
-    public function getName(): string
+    public function getVariable(): string
     {
-        return $this->parameter->getName();
+        return $this->variable ??= get_parameter_variable($this->parameter);
     }
 
-    protected function getDefault(): ?string
+    public function getDefault(): ?string
     {
-        if (! $this->parameter->isDefaultValueAvailable()) {
-            return null;
-        }
-
-        $value = $this->parameter->getDefaultValue();
-
-        if (is_bool($value)) {
-            return $this->default = $value ? 'true' : 'false';
-        }
-
-        if (is_array($value)) {
-            return $this->default = '[]';
-        }
-
-        if (is_null($value)) {
-            return $this->default = 'null';
-        }
-
-        if (is_int($value)) {
-            return $this->default = $value;
-        }
-
-        return var_export($value, true);
+        return $this->default ??= get_parameter_default($this->parameter);
     }
 
-    protected function getType(): ?string
+    public function getType(): ?string
     {
-        if ($type = $this->parameter->getType()) {
-            return normalize_reflection_type($type);
-        }
-
-        return null;
+        return $this->type ??= get_parameter_type($this->parameter);
     }
 
-    protected function getVariable(): string
+    public function withDefault(bool $value = true): static
     {
-        return ($this->parameter->isPassedByReference() ? '&' : '') .
-               ($this->parameter->isVariadic() ? '...' : '') .
-               '$' . $this->getName();
-    }
-
-    public function hasDefault(): bool
-    {
-        return (bool) $this->default;
-    }
-
-    public function hasType(): bool
-    {
-        return (bool) $this->type;
-    }
-
-    public function withDefault(): static
-    {
-        $this->withDefault = true;
+        $this->withDefault = $value;
 
         return $this;
     }
 
-    public function withType(): static
+    public function withType(bool $value = true): static
     {
-        $this->withType = true;
+        $this->withType = $value;
 
         return $this;
     }
 
     public function __toString(): string
     {
-        $value = $this->variable;
+        $value = $this->getVariable();
 
-        if ($this->withType && $this->hasType()) {
-            $value = $this->type . ' ' . $value;
+        if ($this->withType && $type = $this->getType()) {
+            $value = $type . ' ' . $value;
         }
 
-        if ($this->withDefault && $this->hasDefault()) {
-            $value .= ' = ' . $this->default;
+        if ($this->withDefault && $default = $this->getDefault()) {
+            $value .= ' = ' . $default;
         }
 
         $this->withDefault = false;
-        $this->withType = false;
+        $this->withType    = false;
 
         return $value;
     }

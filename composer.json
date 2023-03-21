@@ -1,6 +1,6 @@
 {
-	"name": "lukaskleinschmidt/kirby-type-hints",
-	"description": "Kirby Type Hints",
+	"name": "lukaskleinschmidt/kirby-types",
+	"description": "Kirby Types",
 	"license": "MIT",
 	"type": "kirby-plugin",
 	"authors": [
@@ -10,13 +10,13 @@
 		}
 	],
 	"require": {
-        "php": "^8.2",
+        "php": "^8.0",
 		"getkirby/composer-installer": "^1.2",
 		"phpdocumentor/reflection-docblock": "^5.3"
 	},
     "autoload": {
         "psr-4": {
-            "LukasKleinschmidt\\TypeHints\\": "src/"
+            "LukasKleinschmidt\\Types\\": "src/"
         }
     },
 	"config": {
