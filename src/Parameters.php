@@ -3,7 +3,6 @@
 namespace LukasKleinschmidt\Types;
 
 use Exception;
-use Kirby\Toolkit\Collection;
 use ReflectionFunctionAbstract;
 use ReflectionParameter;
 use Stringable;

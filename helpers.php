@@ -2,6 +2,7 @@
 
 namespace LukasKleinschmidt\Types;
 
+use Closure;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -38,6 +39,14 @@ function trait_uses_recursive(string $trait): array
     }
 
     return $traits;
+}
+
+/**
+ * Return the default value of the given value.
+ */
+function value(mixed $value, ...$args): mixed
+{
+    return $value instanceof Closure ? $value(...$args) : $value;
 }
 
 function reflection_type_value(ReflectionType $type): string

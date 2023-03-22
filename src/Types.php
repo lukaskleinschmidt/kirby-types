@@ -23,6 +23,8 @@ class Types
 
     protected array $methods = [];
 
+    protected array $config;
+
     /**
      * Create a new Types instance.
      */
@@ -62,13 +64,12 @@ class Types
         $extensions = [];
 
         foreach ($this->methods as $method) {
-            $namespace = $method->getTargetNamespace();
-            $class     = $method->getTargetClass();
+            $namespace = $method->target()->getNamespaceName();
+            $class     = $method->target()->getShortName();
             $name      = $method->getName();
 
             $extensions[$namespace][$class][$name] = $method;
         }
-
 
         F::write($this->app->root('base') . '/' . $filename, $this->render([
             'extensions' => $extensions,
@@ -80,7 +81,7 @@ class Types
      */
     public function pushMethod(Method $method, Closure|bool $overwrite = false): void
     {
-        if ($method->exists()) {
+        if ($method->exists() && $overwrite === false) {
             return;
         }
 
@@ -101,12 +102,45 @@ class Types
         }
     }
 
+    public function config(string $key = null, mixed $default = null): mixed
+    {
+        $this->config ??= require_once dirname(__DIR__) . '/config.php';
+
+        if (! is_null($key)) {
+            return $this->config[$key] ?? $default;
+        }
+
+        return $this->config;
+    }
+
+    public function withConfigMethods(): void
+    {
+        foreach ($this->config('methods', []) as $key => $value) {
+            $this->addConfigMethods($value, new ReflectionClass($key));
+        }
+    }
+
+    public function addConfigMethods(array $methods, ReflectionClass $target): void
+    {
+        foreach ($methods as $name => $callback) {
+            $method = $this->getMethod($name, $target);
+
+            if (is_null($method) && $target->hasMethod($name)) {
+                $this->pushMethod($method = new Method($target->getMethod($name), $target), true);
+            }
+
+            if (! is_null($method)) {
+                $callback($method);
+            }
+        }
+    }
+
     public function withBlueprintFields(): void
     {
-        $this->addBlueprintMethods($site = $this->app->site());
+        $this->addBlueprintFields($site = $this->app->site());
 
         foreach ($this->app->blueprints('pages') as $name) {
-            $this->addBlueprintMethods(Page::factory([
+            $this->addBlueprintFields(Page::factory([
                 'template' => $name,
                 'model'    => $name,
                 'slug'     => $name,
@@ -114,7 +148,7 @@ class Types
         }
 
         foreach ($this->app->blueprints('files') as $name) {
-            $this->addBlueprintMethods(File::factory([
+            $this->addBlueprintFields(File::factory([
                 'filename' => $name,
                 'template' => $name,
                 'parent'   => $site,
@@ -122,7 +156,7 @@ class Types
         }
 
         foreach ($this->app->blueprints('users') as $name) {
-            $this->addBlueprintMethods(User::factory([
+            $this->addBlueprintFields(User::factory([
                 'model' => $name,
             ]), $name);
         }
@@ -158,7 +192,7 @@ class Types
         }
     }
 
-    protected function addBlueprintMethods(ModelWithContent $model, string $name = null): void
+    public function addBlueprintFields(ModelWithContent $model, string $name = null): void
     {
         $function = new ReflectionFunction(fn (): Field =>
             new Field($model, 'key', 'value')
@@ -209,9 +243,9 @@ class Types
     public function addFieldMethodAliases(array $aliases, ReflectionClass $target): void
     {
         foreach ($aliases as $name => $alias) {
-            if ($function = $this->getMethod($alias, $target)) {
+            if ($reflection = $this->getMethodReflection($alias, $target)) {
                 $this->pushMethod(
-                    new FieldMethod($function, $target, $name, $alias)
+                    new FieldMethod($reflection, $target, $name, $alias)
                 );
             }
         }
@@ -222,19 +256,18 @@ class Types
         return $target->getName() . '::' . strtolower($name);
     }
 
-    public function getMethod(string $alias, ReflectionClass $target): ReflectionFunction|ReflectionMethod|null
+    public function getMethod(string $name, ReflectionClass $target): Method|null
     {
-        if ($target->hasMethod($alias)) {
-            return $target->getMethod($alias);
+        return $this->methods[$this->getKey($target, $name)] ?? null;
+    }
+
+    public function getMethodReflection(string $name, ReflectionClass $target): ReflectionFunction|ReflectionMethod|null
+    {
+        if ($target->hasMethod($name)) {
+            return $target->getMethod($name);
         }
 
-        $key = $this->getKey($target, $alias);
-
-        if (isset($this->methods[$key])) {
-            return $this->methods[$key]->function();
-        }
-
-        return null;
+        return $this->getMethod($name, $target)?->function();
     }
 
     public function getMethodKey(Method $method): string

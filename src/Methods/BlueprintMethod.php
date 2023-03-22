@@ -64,7 +64,7 @@ class BlueprintMethod extends Method
             : 'Uses a `' . $type . '` field.';
 
         if ($link = $this->link($type)) {
-            $comment->tags[] = '@see ' . $link;
+            $comment->tags->add('see', $link);
         }
     }
 
@@ -76,10 +76,7 @@ class BlueprintMethod extends Method
             $comment->description .= '\\' . PHP_EOL . $description;
         }
 
-        $tags = $method->comment()->tags;
-        $tags = array_merge($comment->tags, $tags);
-        $tags = array_unique($tags);
-
-        $comment->tags = $tags;
+        $comment->tags->merge($method->comment()->tags);
+        $comment->tags->unique();
     }
 }

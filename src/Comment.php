@@ -4,7 +4,6 @@ namespace LukasKleinschmidt\Types;
 
 use phpDocumentor\Reflection\DocBlock;
 use phpDocumentor\Reflection\DocBlock\Serializer;
-use phpDocumentor\Reflection\DocBlock\Tag;
 use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Types\Context;
 use phpDocumentor\Reflection\Types\ContextFactory;
@@ -14,12 +13,20 @@ use Stringable;
 
 class Comment implements Stringable
 {
+    public Tags $tags;
+
     public function __construct(
         public ?string $summary = null,
         public ?string $description = null,
-        public array $tags = [],
+        Tags|array $tags = [],
         protected ?DocBlock $docBlock = null
-    ) {}
+    ) {
+        if (! $tags instanceof Tags) {
+           $tags = new Tags($tags);
+        }
+
+        $this->tags = $tags;
+    }
 
     public static function from(ReflectionFunction|ReflectionMethod $source): static
     {
@@ -54,14 +61,10 @@ class Comment implements Stringable
 
     public static function fromDocBlock(DocBlock $docBlock): static
     {
-        $tags = array_map(fn (Tag $type) =>
-            '@' . $type->getName() . ' ' . $type
-        , $docBlock->getTags());
-
         return new static(
             $docBlock->getSummary(),
             $docBlock->getDescription(),
-            $tags,
+            $docBlock->getTags(),
             $docBlock,
         );
     }

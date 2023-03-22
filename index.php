@@ -10,8 +10,8 @@ use Kirby\CLI\CLI;
 
 App::plugin('lukaskleinschmidt/types', [
     'snippets' => [
-        'stubs/types-comment'  => __DIR__ . '/snippets/comment.php',
-        'stubs/types-template' => __DIR__ . '/snippets/template.php',
+        'stubs/types-comment'  => __DIR__ . '/snippets/comment.stub.php',
+        'stubs/types-template' => __DIR__ . '/snippets/template.stub.php',
     ],
     'commands' => [
         'types:create' => [
@@ -22,6 +22,7 @@ App::plugin('lukaskleinschmidt/types', [
                 $typehints->withFieldMethods();
                 $typehints->withClassMethods();
                 $typehints->withBlueprintFields();
+                $typehints->withConfigMethods();
 
                 $typehints->create($cli->arg('filename'));
             },

@@ -126,16 +126,6 @@ class Method
         return $this->alias;
     }
 
-    public function getTargetClass(): string
-    {
-        return $this->target->getShortName();
-    }
-
-    public function getTargetNamespace(): string
-    {
-        return $this->target->getNamespaceName();
-    }
-
     public function getParams(): Parameters
     {
         return $this->parameters();
