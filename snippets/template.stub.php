@@ -35,7 +35,7 @@ namespace <?= $namespace . PHP_EOL ?>
 namespace <?= $namespace . PHP_EOL ?>
 {
 <?php foreach ($aliases as $alias): ?>
-    class <?= $alias->getName() ?> extends \<?= $alias->target()->getName() ?>  {}
+    class <?= $alias->getName() ?> extends \<?= $alias->target()->getName() ?> {}
 <?php endforeach ?>
 }
 <?php endforeach ?>
