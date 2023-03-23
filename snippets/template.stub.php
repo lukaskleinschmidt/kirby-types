@@ -7,7 +7,7 @@
  * @see https://github.com/lukaskleinschmidt/kirby-type-hints
  */
 
-<?php foreach ($extensions as $namespace => $classes): ?>
+<?php foreach ($methods as $namespace => $classes): ?>
 namespace <?= $namespace . PHP_EOL ?>
 {
 <?php foreach ($classes as $class => $methods): ?>
@@ -27,6 +27,15 @@ namespace <?= $namespace . PHP_EOL ?>
         }
 <?php endforeach ?>
     }
+<?php endforeach ?>
+}
+<?php endforeach ?>
+<?php foreach ($aliases as $namespace => $aliases): ?>
+
+namespace <?= $namespace . PHP_EOL ?>
+{
+<?php foreach ($aliases as $alias): ?>
+    class <?= $alias->getName() ?> extends \<?= $alias->target()->getName() ?>  {}
 <?php endforeach ?>
 }
 <?php endforeach ?>

@@ -23,29 +23,74 @@ class Types
 
     protected array $methods = [];
 
+    protected array $aliases = [];
+
     protected array $config;
 
     /**
      * Create a new Types instance.
      */
     public function __construct(
-        protected App $app
+        protected App $app,
+        protected array $options = [],
     ) {}
 
     /**
      * Create a new Types instance.
      */
-    public static function instance(App $app = null): static
+    public static function instance(App $app = null, array $options = []): static
     {
-        return static::$instance ??= new static($app ?? App::instance());
+        return static::$instance ??= new static($app ?? App::instance(), $options);
+    }
+
+    public function option(string $key, mixed $default = null): mixed
+    {
+        return $this->options[$key] ?? $default;
+    }
+
+    public function config(string $key = null, mixed $default = null): mixed
+    {
+        $this->config ??= require_once dirname(__DIR__) . '/config.php';
+
+        if (! is_null($key)) {
+            return $this->config[$key] ?? $default;
+        }
+
+        return $this->config;
     }
 
     /**
      * Returns the types content.
      */
-    public function render(array $data): string
+    public function render(): string
     {
-        return snippet('stubs/types-template', $data, true);
+        $methods = [];
+
+        foreach ($this->methods as $method) {
+            $namespace = $method->target()->getNamespaceName();
+            $class     = $method->target()->getShortName();
+            $name      = $method->getName();
+
+            $methods[$namespace][$class][$name] = $method;
+        }
+
+        $aliases = [];
+
+        foreach ($this->aliases as $alias) {
+            $namespace = $alias->getNamespace();
+            $name      = $alias->getName();
+
+            if ($namespace && $this->option('namespaceAliases') === false) {
+                continue;
+            }
+
+            $aliases[$namespace][$name] = $alias;
+        }
+
+        return snippet('stubs/types-template', [
+            'methods' => $methods,
+            'aliases' => $aliases,
+        ], true);
     }
 
     /**
@@ -54,26 +99,28 @@ class Types
     public function create(string $filename = null): void
     {
         if (empty($filename)) {
-            $filename = 'types';
+            $filename = $this->option('filename');
         }
 
         if (! str_ends_with($filename, '.php')) {
             $filename .= '.php';
         }
 
-        $extensions = [];
+        F::write($this->app->root('base') . '/' . $filename, $this->render());
+    }
 
-        foreach ($this->methods as $method) {
-            $namespace = $method->target()->getNamespaceName();
-            $class     = $method->target()->getShortName();
-            $name      = $method->getName();
+    /**
+     * Push a new alias to the collection.
+     */
+    public function pushAlias(Alias $alias, bool $overwrite = false): void
+    {
+        $key = $this->getAliasKey($alias);
 
-            $extensions[$namespace][$class][$name] = $method;
+        if (array_key_exists($key, $this->aliases) && $overwrite === false) {
+            return;
         }
 
-        F::write($this->app->root('base') . '/' . $filename, $this->render([
-            'extensions' => $extensions,
-        ]));
+        $this->aliases[$key] = $alias;
     }
 
     /**
@@ -102,37 +149,11 @@ class Types
         }
     }
 
-    public function config(string $key = null, mixed $default = null): mixed
+    public function withAliases(): void
     {
-        $this->config ??= require_once dirname(__DIR__) . '/config.php';
+        $aliases = require $this->app->root('kirby') . '/config/aliases.php';
 
-        if (! is_null($key)) {
-            return $this->config[$key] ?? $default;
-        }
-
-        return $this->config;
-    }
-
-    public function withConfigMethods(): void
-    {
-        foreach ($this->config('methods', []) as $key => $value) {
-            $this->addConfigMethods($value, new ReflectionClass($key));
-        }
-    }
-
-    public function addConfigMethods(array $methods, ReflectionClass $target): void
-    {
-        foreach ($methods as $name => $callback) {
-            $method = $this->getMethod($name, $target);
-
-            if (is_null($method) && $target->hasMethod($name)) {
-                $this->pushMethod($method = new Method($target->getMethod($name), $target), true);
-            }
-
-            if (! is_null($method)) {
-                $callback($method);
-            }
-        }
+        $this->addAliases($aliases);
     }
 
     public function withBlueprintFields(): void
@@ -162,12 +183,15 @@ class Types
         }
     }
 
-    public function withClassMethods(): void
+    public function withConfigAliases(): void
     {
-        foreach (get_declared_classes() as $class) {
-            if (class_uses_recursive($class)[HasMethods::class] ?? false) {
-                $this->addClassMethods($class);
-            }
+        $this->addAliases($this->config('aliases', []));
+    }
+
+    public function withConfigMethods(): void
+    {
+        foreach ($this->config('methods', []) as $key => $value) {
+            $this->addConfigMethods($value, new ReflectionClass($key));
         }
     }
 
@@ -189,6 +213,24 @@ class Types
             if (isset($extends['fieldMethods'])) {
                 $this->addFieldMethods($extends['fieldMethods'], $target);
             }
+        }
+    }
+
+    public function withMethods(): void
+    {
+        foreach (get_declared_classes() as $class) {
+            if (class_uses_recursive($class)[HasMethods::class] ?? false) {
+                $this->addMethods($class);
+            }
+        }
+    }
+
+    public function addAliases(array $aliases): void
+    {
+        foreach ($aliases as $name => $class) {
+            $class = new ReflectionClass($class);
+
+            $this->pushAlias(new Alias($class, $name));
         }
     }
 
@@ -216,16 +258,18 @@ class Types
         }
     }
 
-    public function addClassMethods(string $class): void
+    public function addConfigMethods(array $methods, ReflectionClass $target): void
     {
-        $target = new ReflectionClass($class);
+        foreach ($methods as $name => $callback) {
+            $method = $this->getMethod($name, $target);
 
-        foreach ($class::$methods as $name => $closure) {
-            $function = new ReflectionFunction($closure);
+            if (is_null($method) && $target->hasMethod($name)) {
+                $this->pushMethod($method = new Method($target->getMethod($name), $target), true);
+            }
 
-            $this->pushMethod(
-                new Method($function, $target, $name)
-            );
+            if (! is_null($method)) {
+                $callback($method);
+            }
         }
     }
 
@@ -251,14 +295,36 @@ class Types
         }
     }
 
-    public function getKey(ReflectionClass $target, string $name): string
+    public function addMethods(string $class): void
     {
-        return $target->getName() . '::' . strtolower($name);
+        $target = new ReflectionClass($class);
+
+        foreach ($class::$methods as $name => $closure) {
+            $function = new ReflectionFunction($closure);
+
+            $this->pushMethod(
+                new Method($function, $target, $name)
+            );
+        }
+    }
+
+    public function getAliasKey(Alias $alias): string
+    {
+        if ($namespace = $alias->getNamespace()) {
+            return strtolower($namespace . '\\' . $alias->getName());
+        }
+
+        return strtolower($alias->getName());
     }
 
     public function getMethod(string $name, ReflectionClass $target): Method|null
     {
-        return $this->methods[$this->getKey($target, $name)] ?? null;
+        return $this->methods[$this->getMethodReflectionKey($name, $target)] ?? null;
+    }
+
+    public function getMethodKey(Method $method): string
+    {
+        return $this->getMethodReflectionKey($method->getName(), $method->target());
     }
 
     public function getMethodReflection(string $name, ReflectionClass $target): ReflectionFunction|ReflectionMethod|null
@@ -270,8 +336,8 @@ class Types
         return $this->getMethod($name, $target)?->function();
     }
 
-    public function getMethodKey(Method $method): string
+    public function getMethodReflectionKey(string $name, ReflectionClass $target): string
     {
-        return $this->getKey($method->target(), $method->getName());
+        return strtolower($target->getName() . '::' . $name);
     }
 }

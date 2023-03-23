@@ -4,27 +4,41 @@ namespace LukasKleinschmidt\Types;
 
 use Kirby\Cms\App;
 use Kirby\CLI\CLI;
+use Kirby\Toolkit\Str;
 
 @include_once __DIR__ . '/vendor/autoload.php';
 @include_once __DIR__ . '/helpers.php';
 
 App::plugin('lukaskleinschmidt/types', [
-    'snippets' => [
-        'stubs/types-comment'  => __DIR__ . '/snippets/comment.stub.php',
-        'stubs/types-template' => __DIR__ . '/snippets/template.stub.php',
+    'options' => [
+        'filename'         => 'types',
+        'namespaceAliases' => false,
     ],
     'commands' => [
         'types:create' => [
             'description' => 'Create a new IDE helper file',
             'command' => function (CLI $cli) {
-                $typehints = Types::instance($cli->kirby());
+                $kirby   = $cli->kirby();
+                $options = $kirby->option('lukaskleinschmidt.types');
 
-                $typehints->withFieldMethods();
-                $typehints->withClassMethods();
-                $typehints->withBlueprintFields();
-                $typehints->withConfigMethods();
+                foreach (array_keys($options) as $key) {
+                    $name = Str::kebab($key);
 
-                $typehints->create($cli->arg('filename'));
+                    if ($cli->climate()->arguments->defined($name)) {
+                        $options[$key] = $cli->arg($name);
+                    }
+                }
+
+                $types = Types::instance($kirby, $options);
+
+                $types->withBlueprintFields();
+                $types->withFieldMethods();
+                $types->withMethods();
+                $types->withConfigMethods();
+                $types->withAliases();
+                $types->withConfigAliases();
+
+                $types->create();
             },
             'args' => [
                 'filename' => [
@@ -32,7 +46,17 @@ App::plugin('lukaskleinschmidt/types', [
                     'longPrefix' => 'filename',
                     'description' => 'The path to the helper file',
                 ],
+                'namespace-aliases' => [
+                    'prefix' => 'na',
+                    'longPrefix' => 'namespace-aliases',
+                    'description' => 'Include namespace aliases',
+                    'noValue' => true,
+                ],
             ],
         ],
+    ],
+    'snippets' => [
+        'stubs/types-comment'  => __DIR__ . '/snippets/comment.stub.php',
+        'stubs/types-template' => __DIR__ . '/snippets/template.stub.php',
     ],
 ]);

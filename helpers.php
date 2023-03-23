@@ -53,14 +53,11 @@ function reflection_type_value(ReflectionType $type): string
 {
     if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
         $name = $type->getName();
-        return str_replace($name, '\\' . trim($name, '\\'), $type);
+        return str_replace($name, '\\' . ltrim($name, '\\'), $type);
     }
 
     if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-        $types = array_map(fn ($type) =>
-            reflection_type_value($type)
-        , $type->getTypes());
-
+        $types = array_map(reflection_type_value::class, $type->getTypes());
         return str_replace($type->getTypes(), $types, $type);
     }
 
@@ -111,4 +108,42 @@ function get_parameter_default(ReflectionParameter $parameter): ?string
     }
 
     return var_export($value, true);
+}
+
+function return_type(string $type, string ...$args): string
+{
+    if (class_exists($type)) {
+        $type = '\\' . ltrim($type, '\\');
+    }
+
+    return join('', [$type, ...$args]);
+}
+
+function return_types(string $glue, array $types): string
+{
+    foreach ($types as $key => $type) {
+        if (is_array($type)) {
+            $types[$key] = join('', array_map(return_type::class, $type));
+        } else {
+            $types[$key] = return_type($type);
+        }
+    }
+
+    return join($glue, $types);
+}
+
+/**
+ * @param string|string[] ...$types
+ */
+function union_type(string|array ...$types): string
+{
+    return return_types('|', $types);
+}
+
+/**
+ * @param string|string[] ...$types
+ */
+function intersection_type(string|array ...$types): string
+{
+    return return_types('&', $types);
 }
