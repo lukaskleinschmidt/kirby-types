@@ -96,7 +96,7 @@ class Types
     /**
      * Create the types file.
      */
-    public function create(string $filename = null): void
+    public function create(string $filename = null, mixed $overwrite = null): mixed
     {
         if (empty($filename)) {
             $filename = $this->option('filename');
@@ -106,7 +106,14 @@ class Types
             $filename .= '.php';
         }
 
-        F::write($this->app->root('base') . '/' . $filename, $this->render());
+        $path = $this->app->root('base') . '/' . $filename;
+
+
+        if (file_exists($path) && ! ($this->option('force') || value($overwrite, $path))) {
+            return null;
+        }
+
+        return F::write($path, $this->render()) ? $path : false;
     }
 
     /**

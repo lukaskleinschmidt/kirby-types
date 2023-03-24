@@ -28,6 +28,8 @@ class Tags extends Collection
 
     public function setContent(string $name, Closure|string $content): static
     {
+        $name = ltrim($name, '@');
+
         foreach ($this->filter('getName', $name) as $key => $tag) {
             $tag->setContent(value($content, $tag, $key));
         }

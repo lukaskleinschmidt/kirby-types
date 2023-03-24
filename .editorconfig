@@ -12,11 +12,7 @@ trim_trailing_whitespace = true
 [*.php]
 indent_size = 4
 
-[*stub.php]
-trim_trailing_whitespace = false
-insert_final_newline = false
-
-[*.md,*.txt]
+[*.{stub.php,md,txt}]
 trim_trailing_whitespace = false
 insert_final_newline = false
 

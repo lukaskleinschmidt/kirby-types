@@ -14,6 +14,7 @@ App::plugin('lukaskleinschmidt/types', [
         'aliases'    => [],
         'decorators' => [],
         'filename'   => 'types.php',
+        'force'      => false,
         'include'    => [
             'aliases',
             'blueprints',
@@ -73,13 +74,34 @@ App::plugin('lukaskleinschmidt/types', [
 
                 $types->withOptionAliases();
 
-                $types->create();
+                $created = $types->create(null, fn (string $path) =>
+                    $cli->line('The file already exists:')
+                        ->dim($path)
+                        ->confirm('Overwrite file?')
+                        ->defaultTo('y')
+                        ->confirmed()
+                );
+
+                $cli->clear();
+
+                if ($created === false) {
+                    $cli->error('The file could not be created');
+                } else if ($created) {
+                    $cli->lightGreen('File created successfully:')
+                        ->dim($created);
+                }
             },
             'args' => [
                 'filename' => [
                     'prefix' => 'f',
                     'longPrefix' => 'filename',
                     'description' => 'The path to the helper file',
+                ],
+                'force' => [
+                    'prefix' => 'F',
+                    'longPrefix' => 'force',
+                    'description' => 'Force the file creation',
+                    'noValue' => true,
                 ],
                 'include' => [
                     'prefix' => 'i',

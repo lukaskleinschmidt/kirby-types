@@ -2,9 +2,9 @@
 
 /**
  * A helper file for Kirby, to provide autocomplete information to your IDE.
- * This file was automatically generated with the Kirby Type Hints plugin.
+ * This file was automatically generated with the Kirby Types plugin.
  *
- * @see https://github.com/lukaskleinschmidt/kirby-type-hints
+ * @see https://github.com/lukaskleinschmidt/kirby-types
  */
 
 <?php foreach ($methods as $namespace => $classes): ?>

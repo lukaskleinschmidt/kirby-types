@@ -1,20 +1,78 @@
 # Kirby Types
-Adds the `kirby types:create` command.
-This is still just a proof of concept.
-But should be stable enough to be tested.
+Additional and extended type hints for your IDE.  
+Adds the `kirby types:create` command to your project.  
+This command will create a file in your projects root directory that your IDE will pick.
 
 > **Note**
-> You need the latest develop branch version of `getkirby/cli`
+> Make sure you have the [`getkirby/cli`](https://github.com/getkirby/cli) installed to use the command
 
 ## Installation
-### Composer
-For now you need to set `"minimum-stability": "dev"` in your `composer.json` file.
+Require this package with composer using the following command.
 ```
-composer require lukaskleinschmidt/kirby-types
+composer require --dev lukaskleinschmidt/kirby-types
 ```
 
-### Download
-Download and copy this repository to `/site/plugins/kirby-types`.
+## Usage
+Simply run `kirby types:create` to create the type hints file.
+
+### Command Options 
+You can set the `filename`, `force` and `include` option when running the command.
+```bash
+kirby types:create --filename my-ide-helper --force --include
+```
+
+## Options
+You can use the following options in your `config.php`.  
+These are the plugin's default options.
+```php
+return [
+    'lukaskleinschmidt.types' => [
+        'aliases'    => [],
+        'decorators' => [],
+        'filename'   => 'types.php',
+        'force'      => false,
+        'include'    => [
+            'aliases',
+            'blueprints',
+            'decorators',
+            'methods',
+        ],
+    ],
+];
+```
+
+### Aliases
+You can add your own aliases you want to include.
+```php
+return [
+    'lukaskleinschmidt.types' => [
+        'aliases' => [
+            'MyClass' => \LukasKleinschmidt\MyClass::class,
+        ],
+    ],
+];
+```
+
+### Decorators
+You can modify methods and their DocBlock in a callback to improve IDE type hints.  
+The plugin has some [default decorators](https://github.com/lukaskleinschmidt/kirby-types/blob/main/config.php) already defined. 
+```php
+use LukasKleinschmidt\Types\Method;
+
+return [
+    'lukaskleinschmidt.types' => [
+        'decorators' => [
+            Layout::class => [
+                'columns' => function (Method $method) {
+                    $method->comment()->tags->setContent(
+                        '@return', '\Kirby\Cms\LayoutColumns|Kirby\Cms\LayoutColumn[]'
+                    );
+                },
+            ],
+        ],
+    ],
+];
+```
 
 ## License
 MIT
