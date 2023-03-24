@@ -16,7 +16,7 @@ use Kirby\Cms\User;
 use Kirby\Cms\Users;
 
 return [
-    'methods' => [
+    'decorators' => [
         Field::class => [
             'toBlocks' => function (Method $method) {
                 $method->comment()->tags->setContent('return', union_type(

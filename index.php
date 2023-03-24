@@ -11,8 +11,15 @@ use Kirby\Toolkit\Str;
 
 App::plugin('lukaskleinschmidt/types', [
     'options' => [
-        'filename'         => 'types',
-        'namespaceAliases' => false,
+        'aliases'    => [],
+        'decorators' => [],
+        'filename'   => 'types.php',
+        'include'    => [
+            'aliases',
+            'blueprints',
+            'decorators',
+            'methods',
+        ],
     ],
     'commands' => [
         'types:create' => [
@@ -29,14 +36,42 @@ App::plugin('lukaskleinschmidt/types', [
                     }
                 }
 
+                $include = $options['include'];
+
+                if ($include === true) {
+                    $input = $cli->climate()->checkboxes('Select the parts you want to include', [
+                        'aliases'    => 'Aliases',
+                        'blueprints' => 'Blueprints',
+                        'decorators' => 'Decorators',
+                        'methods'    => 'Methods',
+                    ]);
+
+                    $include = $input->prompt();
+                }
+
                 $types = Types::instance($kirby, $options);
 
-                $types->withBlueprintFields();
-                $types->withFieldMethods();
-                $types->withMethods();
-                $types->withConfigMethods();
-                $types->withAliases();
-                $types->withConfigAliases();
+                if (in_array('blueprints', $include)) {
+                    $types->withBlueprints();
+                }
+
+                if (in_array('methods', $include)) {
+                    $types->withFieldMethods();
+                    $types->withTraitMethods();
+                }
+
+                if (in_array('decorators', $include)) {
+                    $types->withConfigDecorators();
+                }
+
+                $types->withOptionDecorators();
+
+                if (in_array('aliases', $include)) {
+                    $types->withAliases();
+                    $types->withConfigAliases();
+                }
+
+                $types->withOptionAliases();
 
                 $types->create();
             },
@@ -46,10 +81,10 @@ App::plugin('lukaskleinschmidt/types', [
                     'longPrefix' => 'filename',
                     'description' => 'The path to the helper file',
                 ],
-                'namespace-aliases' => [
-                    'prefix' => 'na',
-                    'longPrefix' => 'namespace-aliases',
-                    'description' => 'Include namespace aliases',
+                'include' => [
+                    'prefix' => 'i',
+                    'longPrefix' => 'include',
+                    'description' => 'Select the parts you want to include',
                     'noValue' => true,
                 ],
             ],

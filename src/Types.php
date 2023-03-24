@@ -4,6 +4,7 @@ namespace LukasKleinschmidt\Types;
 
 use Closure;
 use Kirby\Cms\App;
+use Kirby\Cms\Block;
 use Kirby\Cms\Field;
 use Kirby\Cms\File;
 use Kirby\Cms\ModelWithContent;
@@ -80,7 +81,7 @@ class Types
             $namespace = $alias->getNamespace();
             $name      = $alias->getName();
 
-            if ($namespace && $this->option('namespaceAliases') === false) {
+            if ($namespace) {
                 continue;
             }
 
@@ -156,12 +157,22 @@ class Types
         $this->addAliases($aliases);
     }
 
-    public function withBlueprintFields(): void
+    public function withConfigAliases(): void
     {
-        $this->addBlueprintFields($site = $this->app->site());
+        $this->addAliases($this->config('aliases', []));
+    }
+
+    public function withOptionAliases(): void
+    {
+        $this->addAliases($this->option('aliases', []));
+    }
+
+    public function withBlueprints(): void
+    {
+        $this->addBlueprints($site = $this->app->site());
 
         foreach ($this->app->blueprints('pages') as $name) {
-            $this->addBlueprintFields(Page::factory([
+            $this->addBlueprints(Page::factory([
                 'template' => $name,
                 'model'    => $name,
                 'slug'     => $name,
@@ -169,7 +180,7 @@ class Types
         }
 
         foreach ($this->app->blueprints('files') as $name) {
-            $this->addBlueprintFields(File::factory([
+            $this->addBlueprints(File::factory([
                 'filename' => $name,
                 'template' => $name,
                 'parent'   => $site,
@@ -177,21 +188,16 @@ class Types
         }
 
         foreach ($this->app->blueprints('users') as $name) {
-            $this->addBlueprintFields(User::factory([
+            $this->addBlueprints(User::factory([
                 'model' => $name,
             ]), $name);
         }
     }
 
-    public function withConfigAliases(): void
+    public function withConfigDecorators(): void
     {
-        $this->addAliases($this->config('aliases', []));
-    }
-
-    public function withConfigMethods(): void
-    {
-        foreach ($this->config('methods', []) as $key => $value) {
-            $this->addConfigMethods($value, new ReflectionClass($key));
+        foreach ($this->config('decorators', []) as $key => $value) {
+            $this->addDecorator($value, new ReflectionClass($key));
         }
     }
 
@@ -216,11 +222,18 @@ class Types
         }
     }
 
-    public function withMethods(): void
+    public function withOptionDecorators(): void
+    {
+        foreach ($this->option('decorators', []) as $key => $value) {
+            $this->addDecorator($value, new ReflectionClass($key));
+        }
+    }
+
+    public function withTraitMethods(): void
     {
         foreach (get_declared_classes() as $class) {
             if (class_uses_recursive($class)[HasMethods::class] ?? false) {
-                $this->addMethods($class);
+                $this->addTraitMethods($class);
             }
         }
     }
@@ -234,7 +247,7 @@ class Types
         }
     }
 
-    public function addBlueprintFields(ModelWithContent $model, string $name = null): void
+    public function addBlueprints(ModelWithContent $model, string $name = null): void
     {
         $function = new ReflectionFunction(fn (): Field =>
             new Field($model, 'key', 'value')
@@ -258,16 +271,18 @@ class Types
         }
     }
 
-    public function addConfigMethods(array $methods, ReflectionClass $target): void
+    public function addDecorator(array $methods, ReflectionClass $target): void
     {
         foreach ($methods as $name => $callback) {
             $method = $this->getMethod($name, $target);
 
+
             if (is_null($method) && $target->hasMethod($name)) {
-                $this->pushMethod($method = new Method($target->getMethod($name), $target), true);
+                $method = new Method($target->getMethod($name), $target);
+                $this->pushMethod($method, true);
             }
 
-            if (! is_null($method)) {
+            if ($method instanceof Method) {
                 $callback($method);
             }
         }
@@ -295,7 +310,7 @@ class Types
         }
     }
 
-    public function addMethods(string $class): void
+    public function addTraitMethods(string $class): void
     {
         $target = new ReflectionClass($class);
 
