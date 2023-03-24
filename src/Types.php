@@ -4,7 +4,6 @@ namespace LukasKleinschmidt\Types;
 
 use Closure;
 use Kirby\Cms\App;
-use Kirby\Cms\Block;
 use Kirby\Cms\Field;
 use Kirby\Cms\File;
 use Kirby\Cms\ModelWithContent;
