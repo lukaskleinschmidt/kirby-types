@@ -21,11 +21,11 @@ class Types
 {
 	protected static $instance;
 
-    protected array $methods = [];
+    protected array $config;
 
     protected array $aliases = [];
 
-    protected array $config;
+    protected array $methods = [];
 
     /**
      * Create a new Types instance.
@@ -135,25 +135,26 @@ class Types
      */
     public function pushMethod(Method $method, Closure|bool $overwrite = false): void
     {
-        if ($method->exists() && $overwrite === false) {
+        $args = [$method];
+        $key  = $this->getMethodKey($method);
+
+        if ($exists = array_key_exists($key, $this->methods)) {
+            array_push($args, $this->methods[$key]);
+        }
+
+        $overwrite = value($overwrite, ...$args);
+        $exists    = $method->exists() || $exists;
+
+        if ($overwrite instanceof Method) {
+            $method    = $overwrite;
+            $overwrite = true;
+        }
+
+        if ($exists === true && $overwrite !== true) {
             return;
         }
 
-        $key = $this->getMethodKey($method);
-
-        if ($exists = array_key_exists($key, $this->methods)) {
-            $overwrite = is_callable($overwrite)
-                ? $overwrite($this->methods[$key], $method)
-                : $overwrite;
-
-            if ($overwrite instanceof Method) {
-                $method = $overwrite;
-            }
-        }
-
-        if (! $exists || $overwrite) {
-            $this->methods[$key] = $method;
-        }
+        $this->methods[$key] = $method;
     }
 
     public function withAliases(): void
@@ -253,7 +254,7 @@ class Types
         }
     }
 
-    public function addBlueprints(ModelWithContent $model, string $name = null): void
+    public function addBlueprints(ModelWithContent $model, string $blueprint = null): void
     {
         $function = new ReflectionFunction(fn (): Field =>
             new Field($model, 'key', 'value')
@@ -264,14 +265,11 @@ class Types
         foreach ($model->blueprint()->fields() as $field) {
             $method = new BlueprintMethod($function, $target, $field['name']);
 
-            $method->document($field['type'], $name);
+            $method->document($field['type'], $blueprint);
 
-            $this->pushMethod($method, function (Method $a, Method $b) {
-                if (
-                    $a instanceof BlueprintMethod &&
-                    $b instanceof BlueprintMethod
-                ) {
-                    $a->merge($b);
+            $this->pushMethod($method, function (Method $a, Method $b = null) {
+                if ($a instanceof BlueprintMethod && $b instanceof BlueprintMethod) {
+                    $b->merge($a);
                 }
             });
         }
@@ -282,9 +280,9 @@ class Types
         foreach ($methods as $name => $callback) {
             $method = $this->getMethod($name, $target);
 
-
             if (is_null($method) && $target->hasMethod($name)) {
                 $method = new Method($target->getMethod($name), $target);
+
                 $this->pushMethod($method, true);
             }
 

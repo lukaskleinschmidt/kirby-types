@@ -55,7 +55,7 @@ class BlueprintMethod extends Method
         return static::$links[$type] ?? null;
     }
 
-    public function document(string $type, string $blueprint = null): void
+    public function document(string $type, string $blueprint = null): static
     {
         $comment = $this->comment();
 
@@ -66,9 +66,11 @@ class BlueprintMethod extends Method
         if ($link = $this->link($type)) {
             $comment->tags->add('see', $link);
         }
+
+        return $this;
     }
 
-    public function merge(BlueprintMethod $method): void
+    public function merge(BlueprintMethod $method): static
     {
         $comment = $this->comment();
 
@@ -78,5 +80,7 @@ class BlueprintMethod extends Method
 
         $comment->tags->merge($method->comment()->tags);
         $comment->tags->unique();
+
+        return $this;
     }
 }
