@@ -19,8 +19,6 @@ use ReflectionMethod;
 
 class Types
 {
-	protected static $instance;
-
     protected array $config;
 
     protected array $aliases = [];
@@ -34,14 +32,6 @@ class Types
         protected App $app,
         protected array $options = [],
     ) {}
-
-    /**
-     * Create a new Types instance.
-     */
-    public static function instance(App $app = null, array $options = []): static
-    {
-        return static::$instance ??= new static($app ?? App::instance(), $options);
-    }
 
     public function option(string $key, mixed $default = null): mixed
     {
@@ -94,26 +84,31 @@ class Types
     }
 
     /**
-     * Create the types file.
+     * Returns the file path.
      */
-    public function create(string $filename = null, mixed $overwrite = null): mixed
+    public function path(): string
     {
-        if (empty($filename)) {
-            $filename = $this->option('filename');
-        }
+        $filename = $this->option('filename');
 
         if (! str_ends_with($filename, '.php')) {
             $filename .= '.php';
         }
 
-        $path = $this->app->root('base') . '/' . $filename;
+        return $this->app->root('base') . '/' . $filename;
+    }
 
+    /**
+     * Create the types file.
+     */
+    public function create(mixed $overwrite = null): ?bool
+    {
+        $path = $this->path();
 
         if (file_exists($path) && ! ($this->option('force') || value($overwrite, $path))) {
             return null;
         }
 
-        return F::write($path, $this->render()) ? $path : false;
+        return F::write($path, $this->render());
     }
 
     /**
