@@ -61,7 +61,9 @@ class Types
         }
 
         if (is_array($value)) {
-            $value = new Fieldset($field[$value[0]], $value[1]);
+            if ($fields = A::get($field, $value[0])) {
+                $value = new Fieldset($fields, $value[1]);
+            }
         }
 
         if ($value instanceof Fieldset) {
@@ -288,10 +290,14 @@ class Types
             new Field(null, 'key', 'value')
         );
 
-        foreach ($fields as $field) {
-            $method = new BlueprintMethod($function, $target, $field['name']);
+        foreach ($fields as $name => $field) {
+            if ($field === true) {
+                $field = ['type' => $name];
+            }
 
-            $method->document($field['type'], $blueprint);
+            $method = new BlueprintMethod($function, $target, $name);
+
+            $method->document($type = $field['type'], $blueprint);
 
             $this->pushMethod($method, function (Method $a, Method $b = null) {
                 if ($a instanceof BlueprintMethod && $b instanceof BlueprintMethod) {
@@ -299,8 +305,8 @@ class Types
                 }
             });
 
-            $name = trim($blueprint . '.' . $field['name'], '.');
-            $path = trim($name . '.' . $field['type'], '.');
+            $name = trim($blueprint . '.' . $name, '.');
+            $path = trim($name . '.' . $type, '.');
 
             if ($fieldset = $this->fieldset($path, $field)) {
                 $this->addBlueprintFields($name, $fieldset->fields(), $fieldset->target());
