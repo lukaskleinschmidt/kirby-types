@@ -11,6 +11,7 @@ use Kirby\Cms\Page;
 use Kirby\Cms\User;
 use Kirby\Cms\HasMethods;
 use Kirby\Filesystem\F;
+use Kirby\Toolkit\A;
 use LukasKleinschmidt\Types\Methods\BlueprintMethod;
 use LukasKleinschmidt\Types\Methods\FieldMethod;
 use ReflectionClass;
@@ -31,22 +32,43 @@ class Types
     public function __construct(
         protected App $app,
         protected array $options = [],
-    ) {}
+    ) {
+        $this->config = require_once dirname(__DIR__) . '/config.php';
+    }
 
     public function option(string $key, mixed $default = null): mixed
     {
-        return $this->options[$key] ?? $default;
+        return A::get($this->options, $key, $default);
     }
 
-    public function config(string $key = null, mixed $default = null): mixed
+    public function config(string $key, mixed $default = null): mixed
     {
-        $this->config ??= require_once dirname(__DIR__) . '/config.php';
+        return A::get($this->config, $key, $default);
+    }
 
-        if (! is_null($key)) {
-            return $this->config[$key] ?? $default;
+    public function fieldset(string $path, array $field): ?Fieldset
+    {
+        $type = 'fieldsets.' . substr(strrchr($path, '.'), 1);
+        $path = 'fieldsets.' . $path;
+
+        $value   = $this->option($path) ?? $this->config($path);
+        $value ??= $this->option($type) ?? $this->config($type);
+
+        $value = value($value, $field);
+
+        if (is_string($value)) {
+            $value = ['fields', $value];
         }
 
-        return $this->config;
+        if (is_array($value)) {
+            $value = new Fieldset($field[$value[0]], $value[1]);
+        }
+
+        if ($value instanceof Fieldset) {
+            return $value;
+        }
+
+        return null;
     }
 
     /**
@@ -171,28 +193,28 @@ class Types
 
     public function withBlueprints(): void
     {
-        $this->addBlueprints($site = $this->app->site());
+        $this->addBlueprint($site = $this->app->site());
 
         foreach ($this->app->blueprints('pages') as $name) {
-            $this->addBlueprints(Page::factory([
+            $this->addBlueprint(Page::factory([
                 'template' => $name,
                 'model'    => $name,
                 'slug'     => $name,
-            ]), $name);
+            ]));
         }
 
         foreach ($this->app->blueprints('files') as $name) {
-            $this->addBlueprints(File::factory([
+            $this->addBlueprint(File::factory([
                 'filename' => $name,
                 'template' => $name,
                 'parent'   => $site,
-            ]), $name);
+            ]));
         }
 
         foreach ($this->app->blueprints('users') as $name) {
-            $this->addBlueprints(User::factory([
+            $this->addBlueprint(User::factory([
                 'model' => $name,
-            ]), $name);
+            ]), 'users/' . $name);
         }
     }
 
@@ -249,15 +271,24 @@ class Types
         }
     }
 
-    public function addBlueprints(ModelWithContent $model, string $blueprint = null): void
+    public function addBlueprint(ModelWithContent $model, string $name = null): void
     {
-        $function = new ReflectionFunction(fn (): Field =>
-            new Field($model, 'key', 'value')
-        );
-
         $target = new ReflectionClass($model);
 
-        foreach ($model->blueprint()->fields() as $field) {
+        $blueprint = $model->blueprint();
+        $fields    = $blueprint->fields();
+        $name      = strtolower($name ?? $blueprint->name());
+
+        $this->addBlueprintFields($name, $fields, $target);
+    }
+
+    public function addBlueprintFields(string $blueprint, array $fields, ReflectionClass $target): void
+    {
+        $function = new ReflectionFunction(fn (): Field =>
+            new Field(null, 'key', 'value')
+        );
+
+        foreach ($fields as $field) {
             $method = new BlueprintMethod($function, $target, $field['name']);
 
             $method->document($field['type'], $blueprint);
@@ -267,6 +298,13 @@ class Types
                     $b->merge($a);
                 }
             });
+
+            $name = trim($blueprint . '.' . $field['name'], '.');
+            $path = trim($name . '.' . $field['type'], '.');
+
+            if ($fieldset = $this->fieldset($path, $field)) {
+                $this->addBlueprintFields($name, $fieldset->fields(), $fieldset->target());
+            }
         }
     }
 

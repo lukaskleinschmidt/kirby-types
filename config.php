@@ -3,6 +3,7 @@
 namespace LukasKleinschmidt\Types;
 
 use Kirby\Cms\Blocks;
+use Kirby\Cms\Content;
 use Kirby\Cms\Field;
 use Kirby\Cms\File;
 use Kirby\Cms\Files;
@@ -12,6 +13,8 @@ use Kirby\Cms\LayoutColumns;
 use Kirby\Cms\Layouts;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Cms\Structure;
+use Kirby\Cms\StructureObject;
 use Kirby\Cms\User;
 use Kirby\Cms\Users;
 
@@ -43,6 +46,11 @@ return [
                     Users::class, [User::class, '[]'],
                 ));
             },
+            'toStructure' => function (Method $method) {
+                $method->comment()->tags->setContent('return', union_type(
+                    Structure::class, [StructureObject::class, '[]'],
+                ));
+            },
         ],
         Layout::class => [
             'columns' => function (Method $method) {
@@ -58,5 +66,9 @@ return [
                 ));
             },
         ],
+    ],
+    'fieldsets' => [
+        'object'    => Content::class,
+        'structure' => StructureObject::class,
     ],
 ];

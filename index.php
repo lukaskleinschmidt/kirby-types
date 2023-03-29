@@ -12,6 +12,7 @@ App::plugin('lukaskleinschmidt/types', [
     'options' => [
         'aliases'    => [],
         'decorators' => [],
+        'fieldsets'  => [],
         'filename'   => 'types.php',
         'force'      => false,
         'include'    => [
