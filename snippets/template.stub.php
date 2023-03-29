@@ -15,7 +15,7 @@ namespace <?= $namespace . PHP_EOL ?>
     {
 <?php
     /**
-     * @var \LukasKleinschmidt\Types\CustomMethod $method
+     * @var \LukasKleinschmidt\Types\Method $method
      */
     foreach ($methods as $method):
 ?>
