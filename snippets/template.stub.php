@@ -6,8 +6,8 @@
  *
  * @see https://github.com/lukaskleinschmidt/kirby-types
  */
-
 <?php foreach ($methods as $namespace => $classes): ?>
+
 namespace <?= $namespace . PHP_EOL ?>
 {
 <?php foreach ($classes as $class => $methods): ?>
