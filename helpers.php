@@ -46,7 +46,7 @@ function trait_uses_recursive(string $trait): array
  */
 function value(mixed $value, ...$args): mixed
 {
-    return $value instanceof Closure ? $value(...$args) : $value;
+    return $value instanceof Closure ? $value(...$args): $value;
 }
 
 function reflection_type_value(ReflectionType $type): string
