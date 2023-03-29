@@ -15,6 +15,7 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\V;
 use LukasKleinschmidt\Types\Methods\BlueprintMethod;
 use LukasKleinschmidt\Types\Methods\FieldMethod;
+use LukasKleinschmidt\Types\Methods\StaticMethod;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
@@ -272,7 +273,7 @@ class Types
         foreach (V::$validators as $name => $closure) {
             $function = new ReflectionFunction($closure);
 
-            $this->pushMethod(new Method($function, $target, $name));
+            $this->pushMethod(new StaticMethod($function, $target, $name));
         }
     }
 

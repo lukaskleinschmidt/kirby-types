@@ -20,7 +20,7 @@ namespace <?= $namespace . PHP_EOL ?>
     foreach ($methods as $method):
 ?>
         <?= $method->getComment(8) . PHP_EOL ?>
-        public function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
+        public<?= r($method->static(), ' static ', ' ')?>function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
         {
             /** @var \<?= $method->target()->getName() ?> $instance */
             return $instance-><?= $method->getAlias() ?? $name ?>(<?= $method->getParams() ?>);

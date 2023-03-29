@@ -96,6 +96,14 @@ class Method
     }
 
     /**
+     * Checks whether the method should be called statically.
+     */
+    public function static(): bool
+    {
+        return $this->function->isStatic();
+    }
+
+    /**
      * Returns the function.
      */
     public function function(): ReflectionFunction|ReflectionMethod

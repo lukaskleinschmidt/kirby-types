@@ -3,11 +3,11 @@
         'name' => 'lukaskleinschmidt/kirby-types',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'af4bf59f5f06dc4e8b55217c5570bdcc7836c6e0',
+        'reference' => '01576ce2ccee41a8ef7a3e399244c06e93e071b2',
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'doctrine/deprecations' => array(
@@ -31,7 +31,7 @@
         'lukaskleinschmidt/kirby-types' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'af4bf59f5f06dc4e8b55217c5570bdcc7836c6e0',
+            'reference' => '01576ce2ccee41a8ef7a3e399244c06e93e071b2',
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -56,9 +56,9 @@
             'dev_requirement' => false,
         ),
         'phpdocumentor/type-resolver' => array(
-            'pretty_version' => '1.7.0',
-            'version' => '1.7.0.0',
-            'reference' => '1534aea9bde19a5c85c5d1e1f834ab63f4c5dcf5',
+            'pretty_version' => '1.7.1',
+            'version' => '1.7.1.0',
+            'reference' => 'dfc078e8af9c99210337325ff5aa152872c98714',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phpdocumentor/type-resolver',
             'aliases' => array(),

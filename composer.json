@@ -14,6 +14,10 @@
 		"getkirby/composer-installer": "^1.2",
 		"phpdocumentor/reflection-docblock": "^5.3"
 	},
+	"require-dev": {
+		"getkirby/cms": "^3.9",
+		"getkirby/cli": "^1.1"
+	},
     "autoload": {
         "psr-4": {
             "LukasKleinschmidt\\Types\\": "src/"
