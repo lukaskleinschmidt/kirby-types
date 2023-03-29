@@ -22,8 +22,12 @@ namespace <?= $namespace . PHP_EOL ?>
         <?= $method->getComment(8) . PHP_EOL ?>
         public<?= r($method->static(), ' static ', ' ')?>function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
         {
+<?php if ($method->static()): ?>
+            return \<?= $method->target()->getName() ?>::<?= $method->getAlias() ?? $name ?>(<?= $method->getParams() ?>);
+<?php else: ?>
             /** @var \<?= $method->target()->getName() ?> $instance */
             return $instance-><?= $method->getAlias() ?? $name ?>(<?= $method->getParams() ?>);
+<?php endif ?>
         }
 <?php endforeach ?>
     }
