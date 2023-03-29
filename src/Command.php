@@ -9,7 +9,7 @@ use League\CLImate\CLImate;
 
 class Command
 {
-    protected static $version = '1.0.4';
+    protected static $version = '1.0.5';
 
     protected array $options = [];
 
@@ -104,6 +104,7 @@ class Command
             $this->climate()->line('<light_green>✓</light_green> added custom methods');
             $types->withFieldMethods();
             $types->withTraitMethods();
+            $types->withValidators();
         }
 
         if ($this->include('decorators')) {

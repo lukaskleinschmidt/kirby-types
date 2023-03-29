@@ -12,6 +12,7 @@ use Kirby\Cms\User;
 use Kirby\Cms\HasMethods;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
+use Kirby\Toolkit\V;
 use LukasKleinschmidt\Types\Methods\BlueprintMethod;
 use LukasKleinschmidt\Types\Methods\FieldMethod;
 use ReflectionClass;
@@ -261,6 +262,17 @@ class Types
             if (class_uses_recursive($class)[HasMethods::class] ?? false) {
                 $this->addTraitMethods($class);
             }
+        }
+    }
+
+    public function withValidators(): void
+    {
+        $target = new ReflectionClass(V::class);
+
+        foreach (V::$validators as $name => $closure) {
+            $function = new ReflectionFunction($closure);
+
+            $this->pushMethod(new Method($function, $target, $name));
         }
     }
 
