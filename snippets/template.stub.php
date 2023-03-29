@@ -13,12 +13,7 @@ namespace <?= $namespace . PHP_EOL ?>
 <?php foreach ($classes as $class => $methods): ?>
     class <?= $class . PHP_EOL ?>
     {
-<?php
-    /**
-     * @var \LukasKleinschmidt\Types\Method $method
-     */
-    foreach ($methods as $method):
-?>
+<?php foreach ($methods as $method): /** @var \LukasKleinschmidt\Types\Method $method */ ?>
         <?= $method->getComment(8) . PHP_EOL ?>
         public<?= r($method->static(), ' static ', ' ')?>function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
         {
@@ -38,7 +33,7 @@ namespace <?= $namespace . PHP_EOL ?>
 
 namespace <?= $namespace . PHP_EOL ?>
 {
-<?php foreach ($aliases as $alias): ?>
+<?php foreach ($aliases as $alias): /** @var \LukasKleinschmidt\Types\Alias $alias */ ?>
     class <?= $alias->getName() ?> extends \<?= $alias->target()->getName() ?> {}
 <?php endforeach ?>
 }
