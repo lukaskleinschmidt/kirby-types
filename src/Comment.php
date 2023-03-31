@@ -74,6 +74,11 @@ class Comment implements Stringable
         return $this->docBlock;
     }
 
+    public function hasContent(): bool
+    {
+        return $this->summary || $this->description || $this->tags->count();
+    }
+
     public function render(): string
     {
         return snippet('stubs/types-comment', [

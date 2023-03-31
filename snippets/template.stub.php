@@ -14,7 +14,9 @@ namespace <?= $namespace . PHP_EOL ?>
     class <?= $class . PHP_EOL ?>
     {
 <?php foreach ($methods as $method): /** @var \LukasKleinschmidt\Types\Method $method */ ?>
+<?php if ($method->hasComment()): ?>
         <?= $method->getComment(8) . PHP_EOL ?>
+<?php endif ?>
         public<?= r($method->static(), ' static ', ' ')?>function <?= $name = $method->getName() ?>(<?= $method->getParams()->detailed() ?>)<?= $method->getReturnType() . PHP_EOL ?>
         {
 <?php if ($method->static()): ?>

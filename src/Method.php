@@ -119,9 +119,16 @@ class Method
         return $this->target;
     }
 
+    public function hasComment(): bool
+    {
+        return $this->comment()->hasContent();
+    }
+
     public function getComment(int $indent = 0): string
     {
-        return $this->comment()->serialize($indent);
+        return preg_replace('/(\s+\*)+(\s+\*\/)$/', '$2',
+            $this->comment()->serialize($indent)
+        );
     }
 
     public function getName(): string
