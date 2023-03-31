@@ -19,6 +19,13 @@ use Kirby\Toolkit\A;
 
 return [
     'decorators' => [
+        Content::class => [
+            'fields' => function (Method $method) {
+                $method->comment()->tags->setContent('return', union_type(
+                    [Field::class, '[]'],
+                ));
+            },
+        ],
         Field::class => [
             'toBlocks' => function (Method $method) {
                 $method->comment()->tags->setContent('return', union_type(
@@ -58,7 +65,7 @@ return [
                 ));
             },
         ],
-        Layouts::ITEM_CLASS => [
+        LayoutColumns::ITEM_CLASS => [
             'blocks' => function (Method $method) {
                 $method->comment()->tags->setContent('return', union_type(
                     Blocks::class, [Blocks::ITEM_CLASS, '[]'],
