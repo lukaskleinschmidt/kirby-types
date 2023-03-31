@@ -9,7 +9,7 @@ use League\CLImate\CLImate;
 
 class Command
 {
-    protected static $version = '1.0.7';
+    protected static $version = '1.0.8';
 
     protected array $options = [];
 
