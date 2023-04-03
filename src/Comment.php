@@ -84,7 +84,7 @@ class Comment implements Stringable
         return snippet('stubs/types-comment', [
             'description' => $this->description,
             'summary'     => $this->summary,
-            'tags'        => $this->tags,
+            'tags'        => $this->tags->grouped(),
         ], true);
     }
 
@@ -100,6 +100,26 @@ class Comment implements Stringable
         return DocBlockFactory::createInstance()->create(
             $this->render(), $this->docBlock()?->getContext()
         );
+    }
+
+    public function mergeTags(array $tags): static
+    {
+        foreach ($tags as $name => $content) {
+            if ($content instanceof Tag) {
+                $this->tags->mergeTag($content);
+                continue;
+            }
+
+            if (! is_string($name)) {
+                $name = strstr($content, ' ', true);
+            }
+
+            $content = ltrim($content, $name);
+
+            $this->tags->mergeTag(Tag::make(ltrim($name, '@'), trim($content)));
+        }
+
+        return $this;
     }
 
     public function __toString(): string

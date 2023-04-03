@@ -110,7 +110,7 @@ function get_parameter_default(ReflectionParameter $parameter): ?string
     return var_export($value, true);
 }
 
-function return_type(string $type, string ...$args): string
+function type(string $type, string ...$args): string
 {
     if (class_exists($type)) {
         $type = '\\' . ltrim($type, '\\');
@@ -119,13 +119,13 @@ function return_type(string $type, string ...$args): string
     return join('', [$type, ...$args]);
 }
 
-function return_types(string $glue, array $types): string
+function types(string $glue, array $types): string
 {
     foreach ($types as $key => $type) {
         if (is_array($type)) {
-            $types[$key] = join('', array_map(return_type::class, $type));
+            $types[$key] = join('', array_map(type::class, $type));
         } else {
-            $types[$key] = return_type($type);
+            $types[$key] = type($type);
         }
     }
 
@@ -137,7 +137,7 @@ function return_types(string $glue, array $types): string
  */
 function union_type(string|array ...$types): string
 {
-    return return_types('|', $types);
+    return types('|', $types);
 }
 
 /**
@@ -145,5 +145,5 @@ function union_type(string|array ...$types): string
  */
 function intersection_type(string|array ...$types): string
 {
-    return return_types('&', $types);
+    return types('&', $types);
 }

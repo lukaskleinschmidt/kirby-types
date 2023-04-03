@@ -2,6 +2,8 @@
 
 namespace LukasKleinschmidt\Types;
 
+use LukasKleinschmidt\Types\Tags\ParamTag;
+use LukasKleinschmidt\Types\Tags\ReturnTag;
 use Stringable;
 
 class Tag implements Stringable
@@ -13,7 +15,13 @@ class Tag implements Stringable
 
     public static function make(string $name, string $content = null): static
     {
-        return new static($name, $content);
+        $name = ltrim($name, '@');
+
+        return match ($name) {
+            'param'  => new ParamTag($name, $content),
+            'return' => new ReturnTag($name, $content),
+            default  => new static($name, $content),
+        };
     }
 
     public function getName(): string

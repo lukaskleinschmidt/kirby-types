@@ -54,20 +54,19 @@ return [
 ```
 
 ### Decorators
-You can modify methods and their DocBlock in a callback to improve IDE type hints.  
+You can modify methods and their DocBlock to improve IDE type hints.  
 The plugin has some [default decorators](https://github.com/lukaskleinschmidt/kirby-types/blob/main/config.php) already defined. 
 ```php
 use LukasKleinschmidt\Types\Method;
+use Kirby\Cms\Layout;
 
 return [
     'lukaskleinschmidt.types' => [
         'decorators' => [
             Layout::class => [
-                'columns' => function (Method $method) {
-                    $method->comment()->tags->setContent(
-                        '@return', '\Kirby\Cms\LayoutColumns|Kirby\Cms\LayoutColumn[]'
-                    );
-                },
+                'columns' => [
+                    '@return \Kirby\Cms\LayoutColumns|Kirby\Cms\LayoutColumn[]',
+                ],
             ],
         ],
     ],

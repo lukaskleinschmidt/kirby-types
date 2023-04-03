@@ -20,57 +20,39 @@ use Kirby\Toolkit\A;
 return [
     'decorators' => [
         Content::class => [
-            'fields' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    [Field::class, '[]'],
-                ));
-            },
+            'fields' => [
+                '@return' => type(Field::class, '[]'),
+            ],
         ],
         Field::class => [
-            'toBlocks' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Blocks::class, [Blocks::ITEM_CLASS, '[]'],
-                ));
-            },
-            'toFiles' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Files::class, [File::class, '[]'],
-                ));
-            },
-            'toLayouts' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Layouts::class, [Layouts::ITEM_CLASS, '[]'],
-                ));
-            },
-            'toPages' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Pages::class, [Page::class, '[]'],
-                ));
-            },
-            'toUsers' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Users::class, [User::class, '[]'],
-                ));
-            },
-            'toStructure' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Structure::class, [StructureObject::class, '[]'],
-                ));
-            },
+            'toBlocks' => [
+                '@return' => union_type(Blocks::class, [Blocks::ITEM_CLASS, '[]']),
+            ],
+            'toFiles' => [
+                '@return' => union_type(Files::class, [File::class, '[]']),
+            ],
+            'toLayouts' => [
+                '@return' => union_type(Layouts::class, [Layouts::ITEM_CLASS, '[]']),
+            ],
+            'toPages' => [
+                '@return' => union_type(Pages::class, [Page::class, '[]']),
+            ],
+            'toUsers' => [
+                '@return' => union_type(Users::class, [User::class, '[]']),
+            ],
+            'toStructure' => [
+                '@return' => union_type(Structure::class, [StructureObject::class, '[]']),
+            ],
         ],
         Layouts::ITEM_CLASS => [
-            'columns' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    LayoutColumns::class, [LayoutColumns::ITEM_CLASS, '[]'],
-                ));
-            },
+            'columns' => [
+                '@return' => union_type(LayoutColumns::class, [LayoutColumns::ITEM_CLASS, '[]'])
+            ],
         ],
         LayoutColumns::ITEM_CLASS => [
-            'blocks' => function (Method $method) {
-                $method->comment()->tags->setContent('return', union_type(
-                    Blocks::class, [Blocks::ITEM_CLASS, '[]'],
-                ));
-            },
+            'blocks' => [
+                '@return' => union_type(Blocks::class, [Blocks::ITEM_CLASS, '[]'])
+            ],
         ],
     ],
     'fieldsets' => [

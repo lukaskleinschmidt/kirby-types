@@ -327,20 +327,22 @@ class Types
         }
     }
 
-    public function addDecorator(array $methods, ReflectionClass $target): void
+    public function addDecorator(array $decorators, ReflectionClass $target): void
     {
-        foreach ($methods as $name => $callback) {
-            $method = $this->getMethod($name, $target);
+        foreach ($decorators as $key => $value) {
+            $method = $this->getMethod($key, $target);
 
-            if (is_null($method) && $target->hasMethod($name)) {
-                $method = new Method($target->getMethod($name), $target);
+            if (is_null($method) && $target->hasMethod($key)) {
+                $method = new Method($target->getMethod($key), $target);
 
                 $this->pushMethod($method, true);
             }
 
-            if ($method instanceof Method) {
-                $callback($method);
+            if (! $method instanceof Method) {
+                continue;
             }
+
+            $this->applyDecorator($method, $value);
         }
     }
 
@@ -376,6 +378,15 @@ class Types
             $this->pushMethod(
                 new Method($function, $target, $name)
             );
+        }
+    }
+
+    protected function applyDecorator(Method $method, Closure|array $decorator): void
+    {
+        if (is_array($decorator)) {
+            $method->comment()->mergeTags($decorator);
+        } elseif ($decorator instanceof Closure) {
+            $decorator($method);
         }
     }
 
