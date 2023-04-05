@@ -65,7 +65,7 @@ return [
         'decorators' => [
             Layout::class => [
                 'columns' => [
-                    '@return \Kirby\Cms\LayoutColumns|Kirby\Cms\LayoutColumn[]',
+                    '@return \Kirby\Cms\LayoutColumns|\Kirby\Cms\LayoutColumn[]',
                 ],
             ],
         ],
