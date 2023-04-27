@@ -120,7 +120,9 @@ class Types
             $filename .= '.php';
         }
 
-        return $this->app->root('base') . '/' . $filename;
+        $base = $this->app->root('base') ?? $this->app->root('index');
+
+        return $base . '/' . $filename;
     }
 
     /**
