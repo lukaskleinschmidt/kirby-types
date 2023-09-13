@@ -10,8 +10,8 @@ This command will create a file in your projects root directory that your IDE wi
 
 | Types | K3                 | K4                 |          
 |-------|--------------------|--------------------|
-| 1.1.1 | :heavy_check_mark: | :x:                |    
-| 2.0.0 | :x:                | :heavy_check_mark: |    
+| 1.1.2 | :heavy_check_mark: | :x:                |    
+| 2.0.1 | :x:                | :heavy_check_mark: |    
 
 Require this package with composer using the following command.
 ```

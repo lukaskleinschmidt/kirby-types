@@ -2,6 +2,7 @@
 
 namespace LukasKleinschmidt\Types;
 
+use Kirby\Cms\Blueprint;
 use ReflectionClass;
 
 class Fieldset
@@ -13,7 +14,9 @@ class Fieldset
 
     public function fields(): array
     {
-        return $this->fields;
+        return array_map(fn ($field) =>
+            Blueprint::extend($field)
+        , $this->fields);
     }
 
     public function target(): ReflectionClass
