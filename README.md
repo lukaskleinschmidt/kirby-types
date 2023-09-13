@@ -8,10 +8,10 @@ This command will create a file in your projects root directory that your IDE wi
 
 ## Installation
 
-| Types | K3             | K4             |          
-|-------|----------------|----------------|
-| 1.1.1 | :green_circle: | :x:            |    
-| 2.0.0 | :x:            | :green_circle: |    
+| Types | K3                 | K4                 |          
+|-------|--------------------|--------------------|
+| 1.1.1 | :heavy_check_mark: | :x:                |    
+| 2.0.0 | :x:                | :heavy_check_mark: |    
 
 Require this package with composer using the following command.
 ```
