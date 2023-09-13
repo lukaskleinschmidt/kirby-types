@@ -3,8 +3,6 @@
 namespace LukasKleinschmidt\Types;
 
 use Kirby\Cms\Blocks;
-use Kirby\Cms\Content;
-use Kirby\Cms\Field;
 use Kirby\Cms\File;
 use Kirby\Cms\Files;
 use Kirby\Cms\LayoutColumns;
@@ -15,6 +13,8 @@ use Kirby\Cms\Structure;
 use Kirby\Cms\StructureObject;
 use Kirby\Cms\User;
 use Kirby\Cms\Users;
+use Kirby\Content\Content;
+use Kirby\Content\Field;
 use Kirby\Toolkit\A;
 
 return [

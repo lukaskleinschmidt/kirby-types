@@ -4,12 +4,12 @@ namespace LukasKleinschmidt\Types;
 
 use Closure;
 use Kirby\Cms\App;
-use Kirby\Cms\Field;
 use Kirby\Cms\File;
 use Kirby\Cms\ModelWithContent;
 use Kirby\Cms\Page;
 use Kirby\Cms\User;
 use Kirby\Cms\HasMethods;
+use Kirby\Content\Field;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\V;
