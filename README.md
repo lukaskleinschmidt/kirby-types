@@ -7,9 +7,15 @@ This command will create a file in your projects root directory that your IDE wi
 > Make sure you have the [`getkirby/cli`](https://github.com/getkirby/cli) installed to use the command
 
 ## Installation
+
+| Types | K3                 | K4                 |          
+|-------|--------------------|--------------------|
+| 1.1.2 | :heavy_check_mark: | :x:                |    
+| 2.0.1 | :x:                | :heavy_check_mark: |    
+
 Require this package with composer using the following command.
 ```
-composer require --dev lukaskleinschmidt/kirby-types
+composer require --dev lukaskleinschmidt/kirby-types:^1.1
 ```
 
 ## Usage
