@@ -8,7 +8,7 @@ This command will create a file in your projects root directory that your IDE wi
 
 ## Installation
 
-| Types | K3             | K4 4           |          
+| Types | K3             | K4             |          
 |-------|----------------|----------------|
 | 1.1.1 | :green_circle: | :x:            |    
 | 2.0.0 | :x:            | :green_circle: |    
