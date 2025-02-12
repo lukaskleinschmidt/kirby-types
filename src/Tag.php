@@ -13,7 +13,7 @@ class Tag implements Stringable
         protected ?string $content = null,
     ) {}
 
-    public static function make(string $name, string $content = null): static
+    public static function make(string $name, ?string $content = null): static
     {
         $name = ltrim($name, '@');
 
@@ -34,7 +34,7 @@ class Tag implements Stringable
         return $this->content;
     }
 
-    public function setContent(string $content = null)
+    public function setContent(?string $content = null)
     {
         $this->content = $content;
     }

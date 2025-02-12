@@ -50,7 +50,7 @@ class Comment implements Stringable
         return static::fromString($comment, $context);
     }
 
-    public static function fromString(string $comment, Context $context = null): static
+    public static function fromString(string $comment, ?Context $context = null): static
     {
         $docBlock = DocBlockFactory::createInstance()->create(
             $comment, $context

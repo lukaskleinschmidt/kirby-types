@@ -314,7 +314,7 @@ class Types
 
             $method->document($type = $field['type'], $blueprint);
 
-            $this->pushMethod($method, function (Method $a, Method $b = null) {
+            $this->pushMethod($method, function (Method $a, ?Method $b = null) {
                 if ($a instanceof BlueprintMethod && $b instanceof BlueprintMethod) {
                     $b->merge($a);
                 }

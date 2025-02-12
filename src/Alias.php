@@ -12,7 +12,7 @@ class Alias
 
     protected ?string $namespace = null;
 
-    public function __construct(ReflectionClass $target, string $name = null)
+    public function __construct(ReflectionClass $target, ?string $name = null)
     {
         $this->target = $target;
         $this->name   = $name ??= $target->getShortName();
