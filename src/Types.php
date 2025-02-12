@@ -288,7 +288,7 @@ class Types
         }
     }
 
-    public function addBlueprint(ModelWithContent $model, string $name = null): void
+    public function addBlueprint(ModelWithContent $model, ?string $name = null): void
     {
         $target = new ReflectionClass($model);
 
