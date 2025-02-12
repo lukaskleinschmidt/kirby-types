@@ -55,7 +55,7 @@ class BlueprintMethod extends Method
         return static::$links[$type] ?? null;
     }
 
-    public function document(string $type, string $blueprint = null): static
+    public function document(string $type, ?string $blueprint = null): static
     {
         $comment = $this->comment();
 

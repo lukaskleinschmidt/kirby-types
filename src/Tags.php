@@ -23,7 +23,7 @@ class Tags extends Collection
 		$this->data[$key] = $value;
 	}
 
-    public function add(string $tag, string $content = null): static
+    public function add(string $tag, ?string $content = null): static
     {
         return $this->append(Tag::make($tag, $content));
     }

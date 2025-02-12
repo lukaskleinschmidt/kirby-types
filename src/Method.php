@@ -44,8 +44,8 @@ class Method
     public function __construct(
         ReflectionFunction|ReflectionMethod $function,
         ReflectionClass $target,
-        string $name = null,
-        string $alias = null
+        ?string $name = null,
+        ?string $alias = null
     ) {
         $this->function   = $function;
         $this->target     = $target;
