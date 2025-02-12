@@ -33,6 +33,7 @@ class Command
         if ($options['include'] === true) {
             $input = $cli->climate()->checkboxes('select included parts', [
                 'blueprints' => 'blueprint fields',
+                'blocks'     => 'blocks',
                 'methods'    => 'custom methods',
                 'decorators' => 'decorators',
                 'aliases'    => 'aliases',
@@ -98,6 +99,11 @@ class Command
         if ($this->include('blueprints')) {
             $this->climate()->line('<light_green>✓</light_green> added blueprints fields');
             $types->withBlueprints();
+        }
+
+        if ($this->include('blocks')) {
+            $this->climate()->line('<light_green>✓</light_green> added blocks');
+            $types->withBlocks();
         }
 
         if ($this->include('methods')) {

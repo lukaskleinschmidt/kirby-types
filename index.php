@@ -17,6 +17,7 @@ App::plugin('lukaskleinschmidt/types', [
         'force'      => false,
         'include'    => [
             'aliases',
+            'blocks',
             'blueprints',
             'decorators',
             'methods',

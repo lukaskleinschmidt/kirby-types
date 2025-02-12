@@ -4,6 +4,8 @@ namespace LukasKleinschmidt\Types;
 
 use Closure;
 use Kirby\Cms\App;
+use Kirby\Cms\Blocks;
+use Kirby\Cms\Blueprint;
 use Kirby\Cms\File;
 use Kirby\Cms\ModelWithContent;
 use Kirby\Cms\Page;
@@ -13,6 +15,7 @@ use Kirby\Content\Field;
 use Kirby\Filesystem\F;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\V;
+use LukasKleinschmidt\Types\Methods\BlockMethod;
 use LukasKleinschmidt\Types\Methods\BlueprintMethod;
 use LukasKleinschmidt\Types\Methods\FieldMethod;
 use LukasKleinschmidt\Types\Methods\StaticMethod;
@@ -48,7 +51,7 @@ class Types
         return A::get($this->config, $key, $default);
     }
 
-    public function fieldset(string $path, array $field): ?Fieldset
+    public function fieldset(string $path, array $field): Fieldset|array|null
     {
         $type = 'fieldsets.' . substr(strrchr($path, '.'), 1);
         $path = 'fieldsets.' . $path;
@@ -187,6 +190,13 @@ class Types
         $this->addAliases($aliases);
     }
 
+    public function withBlocks(): void
+    {
+        foreach ($this->app->blueprints('blocks') as $type) {
+            $this->addBlock($type);
+        }
+    }
+
     public function withConfigAliases(): void
     {
         $this->addAliases($this->config('aliases', []));
@@ -285,6 +295,35 @@ class Types
             $class = new ReflectionClass($class);
 
             $this->pushAlias(new Alias($class, $name));
+        }
+    }
+
+    public function addBlock(string $block): void
+    {
+        $blueprint = Blueprint::extend('blocks/'. $block);
+
+        $function = new ReflectionFunction(fn (): Field =>
+            new Field(null, 'key', 'value')
+        );
+
+        $target = new ReflectionClass(Blocks::ITEM_CLASS);
+
+        if (! isset($blueprint['fields'])) {
+            $blueprint['fields'] = [
+                $block => ['type' => $block]
+            ];
+        }
+
+        foreach ($blueprint['fields'] as $name => $field) {
+            $method = new BlockMethod($function, $target, $name);
+
+            $method->document($field['type'], $block);
+
+            $this->pushMethod($method, function (Method $a, ?Method $b = null) {
+                if ($a instanceof BlockMethod && $b instanceof BlockMethod) {
+                    $b->merge($a);
+                }
+            });
         }
     }
 
