@@ -13,6 +13,7 @@ use Kirby\Cms\User;
 use Kirby\Cms\HasMethods;
 use Kirby\Content\Field;
 use Kirby\Filesystem\F;
+use Kirby\Form;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\V;
 use LukasKleinschmidt\Types\Methods\BlockMethod;
@@ -30,6 +31,8 @@ class Types
     protected array $aliases = [];
 
     protected array $methods = [];
+
+    protected array $formFields = [];
 
     /**
      * Create a new Types instance.
@@ -49,6 +52,11 @@ class Types
     public function config(string $key, mixed $default = null): mixed
     {
         return A::get($this->config, $key, $default);
+    }
+
+    public function formField(string $type): Form\Field|Form\FieldClass
+    {
+        return $this->formFields[$type] ??= Form\Field::factory($type);
     }
 
     public function fieldset(string $path, array $field): ?Fieldset
@@ -101,20 +109,23 @@ class Types
      */
     public function path(): string
     {
-        $base     = $this->app->root('base');
-        $base   ??= $this->app->root('index');
         $filename = $this->option('filename');
+        $base     = $this->option('base');
+
+        $base ??= $this->app->root('base');
+        $base ??= $this->app->root('index');
 
         if (is_null($filename)) {
-            if (
-                is_dir($vendor = $base . '/vendor') ||
-                is_dir($vendor = dirname($base) . '/vendor')
-            ) {
-                $base = $vendor . '/_types';
-            }
+            $paths = [$base . '/vendor', dirname($base) . '/vendor'];
 
-            $filename = 'types.php';
+            foreach ($paths as $path) {
+                if (is_dir($path)) {
+                    return $path . '/kirby-types.php';
+                }
+            }
         }
+
+        $filename ??= 'types.php';
 
         if (! str_ends_with($filename, '.php')) {
             $filename .= '.php';
@@ -311,6 +322,10 @@ class Types
         ]);
 
         foreach ($fields as $name => $field) {
+            if (! $this->formField($field['type'])->isSaveable()) {
+                continue;
+            }
+
             $method = new BlockMethod($function, $target, $name);
 
             $method->document($field['type'], $block);
@@ -343,6 +358,10 @@ class Types
         foreach ($fields as $name => $field) {
             if ($field === true) {
                 $field = ['type' => $name];
+            }
+
+            if (! $this->formField($field['type'])->isSaveable()) {
+                continue;
             }
 
             $method = new BlueprintMethod($function, $target, $name);
