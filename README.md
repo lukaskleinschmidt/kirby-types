@@ -3,19 +3,24 @@ Additional and extended type hints for your IDE.
 Adds the `kirby types:create` command to your project.  
 This command will create a file in your projects root directory that your IDE will pick.
 
-> **Note**
+> [!Note]
 > Make sure you have the [`getkirby/cli`](https://github.com/getkirby/cli) installed to use the command
 
 ## Installation
 
-| Types | K3                 | K4                 |          
-|-------|--------------------|--------------------|
-| 1.1.2 | :heavy_check_mark: | :x:                |    
-| 2.0.1 | :x:                | :heavy_check_mark: |    
+| Version | Kirby 3              | Kirby 4              | Kirby 5              |
+|---------|:--------------------:|:--------------------:|:--------------------:|
+| `^1.0`  | :blue_square:        | :black_small_square: | :black_small_square: |
+| `^2.0`  | :black_small_square: | :blue_square:        | :blue_square:        |
 
 Require this package with composer using the following command.
 ```
-composer require --dev lukaskleinschmidt/kirby-types:^1.1
+composer require --dev lukaskleinschmidt/kirby-types
+```
+
+Use the `^1.0` version for Kirby 3.
+```
+composer require --dev lukaskleinschmidt/kirby-types:^1.0
 ```
 
 ## Usage
@@ -35,7 +40,7 @@ return [
     'lukaskleinschmidt.types' => [
         'aliases'    => [],
         'decorators' => [],
-        'filename'   => 'types.php',
+        'filename'   => null,
         'force'      => false,
         'include'    => [
             'aliases',

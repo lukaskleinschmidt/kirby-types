@@ -51,7 +51,7 @@ class Types
         return A::get($this->config, $key, $default);
     }
 
-    public function fieldset(string $path, array $field): Fieldset|array|null
+    public function fieldset(string $path, array $field): ?Fieldset
     {
         $type = 'fieldsets.' . substr(strrchr($path, '.'), 1);
         $path = 'fieldsets.' . $path;
@@ -59,23 +59,7 @@ class Types
         $value   = $this->option($path) ?? $this->config($path);
         $value ??= $this->option($type) ?? $this->config($type);
 
-        $value = value($value, $field);
-
-        if (is_string($value)) {
-            $value = ['fields', $value];
-        }
-
-        if (is_array($value)) {
-            if ($fields = A::get($field, $value[0])) {
-                $value = new Fieldset($fields, $value[1]);
-            }
-        }
-
-        if ($value instanceof Fieldset) {
-            return $value;
-        }
-
-        return null;
+        return value($value, $field);
     }
 
     /**
@@ -117,13 +101,24 @@ class Types
      */
     public function path(): string
     {
+        $base     = $this->app->root('base');
+        $base   ??= $this->app->root('index');
         $filename = $this->option('filename');
+
+        if (is_null($filename)) {
+            if (
+                is_dir($vendor = $base . '/vendor') ||
+                is_dir($vendor = dirname($base) . '/vendor')
+            ) {
+                $base = $vendor . '/_types';
+            }
+
+            $filename = 'types.php';
+        }
 
         if (! str_ends_with($filename, '.php')) {
             $filename .= '.php';
         }
-
-        $base = $this->app->root('base') ?? $this->app->root('index');
 
         return $base . '/' . $filename;
     }
@@ -192,8 +187,8 @@ class Types
 
     public function withBlocks(): void
     {
-        foreach ($this->app->blueprints('blocks') as $type) {
-            $this->addBlock($type);
+        foreach ($this->app->blueprints('blocks') as $block) {
+            $this->addBlock($block);
         }
     }
 
@@ -300,7 +295,9 @@ class Types
 
     public function addBlock(string $block): void
     {
-        $blueprint = Blueprint::extend('blocks/'. $block);
+        if (str_starts_with($block, '_')) {
+            return;
+        }
 
         $function = new ReflectionFunction(fn (): Field =>
             new Field(null, 'key', 'value')
@@ -308,13 +305,12 @@ class Types
 
         $target = new ReflectionClass(Blocks::ITEM_CLASS);
 
-        if (! isset($blueprint['fields'])) {
-            $blueprint['fields'] = [
-                $block => ['type' => $block]
-            ];
-        }
+        $fields = extract_fields(Blueprint::extend('blocks/'. $block), [
+            'fields',
+            'tabs.*.fields',
+        ]);
 
-        foreach ($blueprint['fields'] as $name => $field) {
+        foreach ($fields as $name => $field) {
             $method = new BlockMethod($function, $target, $name);
 
             $method->document($field['type'], $block);
@@ -413,7 +409,7 @@ class Types
     {
         $target = new ReflectionClass($class);
 
-        foreach ($class::$methods as $name => $closure) {
+        foreach ($class::$methods ?? [] as $name => $closure) {
             $function = new ReflectionFunction($closure);
 
             $this->pushMethod(

@@ -2,6 +2,7 @@
 
 namespace LukasKleinschmidt\Types;
 
+use Closure;
 use Kirby\Cms\Blueprint;
 use ReflectionClass;
 
@@ -12,11 +13,25 @@ class Fieldset
         protected ReflectionClass|string $target
     ) {}
 
+    /**
+     * @return \Closure(array $field): \LukasKleinschmidt\Types\Fieldset
+     */
+    public static function factory(
+        ReflectionClass|string $target,
+        string|array $extract = 'fields'
+    ): Closure {
+        return function (array $field) use ($target, $extract) {
+            return new static(extract_fields($field, $extract), $target);
+        };
+    }
+
     public function fields(): array
     {
-        return array_map(fn ($field) =>
-            Blueprint::extend($field)
-        , $this->fields);
+        $fields = array_map(function (array|string $field) {
+            return Blueprint::extend($field);
+        }, $this->fields);
+
+        return array_filter($fields);
     }
 
     public function target(): ReflectionClass

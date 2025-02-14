@@ -15,7 +15,6 @@ use Kirby\Cms\User;
 use Kirby\Cms\Users;
 use Kirby\Content\Content;
 use Kirby\Content\Field;
-use Kirby\Toolkit\A;
 
 return [
     'decorators' => [
@@ -56,18 +55,11 @@ return [
         ],
     ],
     'fieldsets' => [
-        'layout' => function (array $field) {
-            if ($tabs = A::get($field, 'settings.tabs')) {
-                $fields = array_reduce($tabs, function ($fields, $tab) {
-                    return array_merge($fields, $tab['fields']);
-                }, []);
-            }
-
-            if ($fields ??= A::get($field, 'settings.fields')) {
-                return new Fieldset($fields, Layouts::ITEM_CLASS);
-            }
-        },
-        'object' => Content::class,
-        'structure' => StructureObject::class,
+        'layout' => Fieldset::factory(Layouts::ITEM_CLASS, [
+            'settings.fields',
+            'settings.tabs.*.fields',
+        ]),
+        'object' => Fieldset::factory(Content::class),
+        'structure' => Fieldset::factory(StructureObject::class),
     ],
 ];

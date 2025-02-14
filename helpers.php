@@ -3,6 +3,7 @@
 namespace LukasKleinschmidt\Types;
 
 use Closure;
+use Kirby\Cms\Blueprint;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -46,7 +47,7 @@ function trait_uses_recursive(string $trait): array
  */
 function value(mixed $value, ...$args): mixed
 {
-    return $value instanceof Closure ? $value(...$args): $value;
+    return is_callable($value) ? $value(...$args): $value;
 }
 
 function reflection_type_value(ReflectionType $type): string
@@ -57,7 +58,7 @@ function reflection_type_value(ReflectionType $type): string
     }
 
     if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
-        $types = array_map(reflection_type_value::class, $type->getTypes());
+        $types = array_map(__NAMESPACE__ . '\reflection_type_value', $type->getTypes());
         return str_replace($type->getTypes(), $types, $type);
     }
 
@@ -123,7 +124,7 @@ function types(string $glue, array $types): string
 {
     foreach ($types as $key => $type) {
         if (is_array($type)) {
-            $types[$key] = join('', array_map(type::class, $type));
+            $types[$key] = join('', array_map(__NAMESPACE__ . '\type', $type));
         } else {
             $types[$key] = type($type);
         }
@@ -146,4 +147,65 @@ function union_type(string|array ...$types): string
 function intersection_type(string|array ...$types): string
 {
     return types('&', $types);
+}
+
+function extract_fields(array $array, string|array $key): array
+{
+    $keys = (array) $key;
+    $fields = [];
+
+    foreach ($keys as $key) {
+        extract_recursive($array, explode('.', $key), $fields);
+    }
+
+    $fields = array_map(function (array|string $field) {
+        return Blueprint::extend($field);
+    }, $fields);
+
+    return array_filter($fields);
+}
+
+function extract_recursive(array $array, array $parts, array &$result): void
+{
+    $part = array_shift($parts);
+
+    foreach ($array as $key => $value) {
+        if (! pattern($part, $key)) {
+            continue;
+        }
+
+        if (empty($parts)) {
+            $result = array_merge($result, (array) $array[$part]);
+        } else {
+            extract_recursive($value, $parts, $result);
+        }
+    }
+}
+
+function pattern(string|array $pattern, string $value, bool $ignoreCase = false): bool
+{
+    if (! is_iterable($pattern)) {
+        $pattern = [$pattern];
+    }
+
+    foreach ($pattern as $pattern) {
+        $pattern = (string) $pattern;
+
+        if ($pattern === $value) {
+            return true;
+        }
+
+        if ($ignoreCase && mb_strtolower($pattern) === mb_strtolower($value)) {
+            return true;
+        }
+
+        $pattern = preg_quote($pattern, '#');
+        $pattern = str_replace('\*', '.*', $pattern);
+
+        if (preg_match('#^'.$pattern.'\z#'.($ignoreCase ? 'iu' : 'u'), $value) === 1) {
+            return true;
+        }
+    }
+
+    return false;
 }
