@@ -54,9 +54,9 @@ class Types
         return A::get($this->config, $key, $default);
     }
 
-    public function formField(string $type): Form\Field|Form\FieldClass
+    public function formField(string $type, array $attrs = []): Form\Field|Form\FieldClass
     {
-        return $this->formFields[$type] ??= Form\Field::factory($type);
+        return $this->formFields[$type] ??= Form\Field::factory($type, $attrs);
     }
 
     public function fieldset(string $path, array $field): ?Fieldset
@@ -199,7 +199,11 @@ class Types
     public function withBlocks(): void
     {
         foreach ($this->app->blueprints('blocks') as $block) {
-            $this->addBlock($block);
+            $this->addBlock(Page::factory([
+                'template' => 'test',
+                'model'    => 'test',
+                'slug'     => 'test',
+            ]), $block);
         }
     }
 
@@ -304,7 +308,7 @@ class Types
         }
     }
 
-    public function addBlock(string $block): void
+    public function addBlock(ModelWithContent $model, string $block): void
     {
         if (str_starts_with($block, '_')) {
             return;
@@ -321,8 +325,10 @@ class Types
             'tabs.*.fields',
         ]);
 
+        $fields = $this->injectModel($fields, $model);
+
         foreach ($fields as $name => $field) {
-            if (! $this->formField($field['type'])->isSaveable()) {
+            if (! $this->formField($field['type'], $field)->isSaveable()) {
                 continue;
             }
 
@@ -343,7 +349,7 @@ class Types
         $target = new ReflectionClass($model);
 
         $blueprint = $model->blueprint();
-        $fields    = $blueprint->fields();
+        $fields    = $this->injectModel($blueprint->fields(), $model);
         $name      = strtolower($name ?? $blueprint->name());
 
         $this->addBlueprintFields($name, $fields, $target);
@@ -360,7 +366,7 @@ class Types
                 $field = ['type' => $name];
             }
 
-            if (! $this->formField($field['type'])->isSaveable()) {
+            if (! $this->formField($field['type'], $field)->isSaveable()) {
                 continue;
             }
 
@@ -477,5 +483,10 @@ class Types
     public function getMethodReflectionKey(string $name, ReflectionClass $target): string
     {
         return strtolower($target->getName() . '::' . $name);
+    }
+
+    private function injectModel(array $fields, ModelWithContent $model): array
+    {
+        return A::map($fields, fn (array $field) => [...$field, 'model' => $model]);
     }
 }
