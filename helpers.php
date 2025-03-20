@@ -2,8 +2,9 @@
 
 namespace LukasKleinschmidt\Types;
 
-use Closure;
 use Kirby\Cms\Blueprint;
+use Kirby\Exception\InvalidArgumentException;
+use Kirby\Form\Field;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -208,4 +209,13 @@ function pattern(string|array $pattern, string $value, bool $ignoreCase = false)
     }
 
     return false;
+}
+
+function field_saveable(string $type): bool
+{
+    try {
+        return Field::factory($type)->isSaveable();
+    } catch (InvalidArgumentException) {
+        return false;
+    }
 }
