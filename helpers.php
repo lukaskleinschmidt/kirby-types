@@ -2,8 +2,8 @@
 
 namespace LukasKleinschmidt\Types;
 
+use Kirby\Cms\App;
 use Kirby\Cms\Blueprint;
-use Kirby\Exception\InvalidArgumentException;
 use Kirby\Form\Field;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
@@ -211,11 +211,34 @@ function pattern(string|array $pattern, string $value, bool $ignoreCase = false)
     return false;
 }
 
+function file_saveable_k4(string $type): bool
+{
+    $field = Field::$types[$type] ?? null;
+
+    if (is_string($field) && class_exists($field) === true) {
+        return (new $field())->isSaveable();
+    }
+
+    return (Field::setup($type)['save'] ?? true) !== false;
+}
+
+function file_saveable_k5(string $type): bool
+{
+    return Field::factory($type)->isSaveable();
+}
+
 function field_saveable(string $type): bool
 {
-    try {
-        return Field::factory($type)->isSaveable();
-    } catch (InvalidArgumentException) {
-        return false;
+    $version = App::version();
+    $version = strstr($version, '-', true);
+
+    if (version_compare($version, '5.0.0', '>=')) {
+        return file_saveable_k5($type);
     }
+
+    if (version_compare($version, '4.0.0', '>=')) {
+        return file_saveable_k4($type);
+    }
+
+    return false;
 }
