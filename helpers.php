@@ -230,7 +230,10 @@ function file_saveable_k5(string $type): bool
 function field_saveable(string $type): bool
 {
     $version = App::version();
-    $version = strstr($version, '-', true);
+
+    if (str_contains($version, '-')) {
+        $version = strstr($version, '-', true);
+    }
 
     if (version_compare($version, '5.0.0', '>=')) {
         return file_saveable_k5($type);
