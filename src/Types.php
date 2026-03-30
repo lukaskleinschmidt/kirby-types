@@ -100,7 +100,7 @@ class Types
                 continue;
             }
 
-            $aliases[$namespace][$name] = $alias;
+            $aliases[$namespace ?? ''][$name] = $alias;
         }
 
         return snippet('stubs/types-template', [
